@@ -24,67 +24,6 @@ const mergeSound = new Audio('/static/audio/merge.mp3');
 const launchSound = new Audio('/static/audio/drop.mp3');
 const gameOverSound = new Audio('/static/audio/gameover.mp3');
 
-// Particle class
-class Particle {
-    constructor(x, y, color, velocity, lifespan) {
-        this.x = x;
-        this.y = y;
-        this.color = color;
-        this.velocity = velocity;
-        this.lifespan = lifespan;
-        this.radius = 2;
-    }
-
-    update(deltaTime) {
-        this.x += this.velocity.x * deltaTime;
-        this.y += this.velocity.y * deltaTime;
-        this.lifespan -= deltaTime;
-    }
-
-    draw(ctx) {
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-        ctx.fillStyle = this.color;
-        ctx.fill();
-        ctx.closePath();
-    }
-}
-
-// ParticleSystem class
-class ParticleSystem {
-    constructor() {
-        this.particles = [];
-    }
-
-    addParticle(x, y, color, velocity, lifespan) {
-        this.particles.push(new Particle(x, y, color, velocity, lifespan));
-    }
-
-    update(deltaTime) {
-        this.particles = this.particles.filter(particle => particle.lifespan > 0);
-        this.particles.forEach(particle => particle.update(deltaTime));
-    }
-
-    draw(ctx) {
-        this.particles.forEach(particle => particle.draw(ctx));
-    }
-
-    createExplosion(x, y, color, particleCount) {
-        for (let i = 0; i < particleCount; i++) {
-            const angle = Math.random() * Math.PI * 2;
-            const speed = Math.random() * 100 + 50;
-            const velocity = {
-                x: Math.cos(angle) * speed,
-                y: Math.sin(angle) * speed
-            };
-            this.addParticle(x, y, color, velocity, Math.random() * 0.5 + 0.5);
-        }
-    }
-}
-
-// Add ParticleSystem to game variables
-let particleSystem;
-
 // Initialize the game
 function init() {
     canvas = document.getElementById('game-canvas');
@@ -104,7 +43,6 @@ function init() {
     canvas.addEventListener('mousemove', handleMouseMove);
     canvas.addEventListener('mouseup', handleMouseUp);
 
-    particleSystem = new ParticleSystem();
     spawnPiece();
     lastTime = performance.now();
     gameLoop();
@@ -174,8 +112,6 @@ function update(deltaTime) {
     if (score >= targetScore) {
         nextRound();
     }
-
-    particleSystem.update(deltaTime);
 }
 
 // Render the game
@@ -197,9 +133,6 @@ function render() {
 
     // Draw spawn indicator
     drawSpawnIndicator();
-
-    // Draw particles
-    particleSystem.draw(ctx);
 }
 
 // Draw trajectory lines
@@ -295,10 +228,6 @@ function checkMerge(piece1, piece2) {
             score += newPieceType.value;
             updateScore();
             mergeSound.play();
-
-            // Add merge particle effect
-            particleSystem.createExplosion(newPiece.x, newPiece.y, piece1.color, 20);
-            particleSystem.createExplosion(newPiece.x, newPiece.y, piece2.color, 20);
         }
     }
 }
@@ -406,11 +335,6 @@ function endGame() {
     gameOverSound.play();
     document.getElementById('final-score').textContent = score;
     document.getElementById('game-over').classList.remove('hidden');
-
-    // Add game over explosion effect
-    pieces.forEach(piece => {
-        particleSystem.createExplosion(piece.x, piece.y, piece.color, 50);
-    });
 }
 
 // Restart the game
