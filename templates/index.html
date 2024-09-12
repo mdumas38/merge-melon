@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Merge Melon Game</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div id="game-container">
+        <canvas id="game-canvas"></canvas>
+        <div id="game-info">
+            <div id="score-container">Score: <span id="score">0</span></div>
+            <div id="round-container">Round: <span id="round">1</span></div>
+        </div>
+        <div id="game-over" class="hidden">
+            <h2>Game Over</h2>
+            <p>Your final score: <span id="final-score"></span></p>
+            <button id="restart-button">Play Again</button>
+        </div>
+    </div>
+    <script src="{{ url_for('static', filename='js/game.js') }}"></script>
+</body>
+</html>
