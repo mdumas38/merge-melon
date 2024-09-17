@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Merge Melon Game</title>
+    <link rel="stylesheet" href="css/style.css">
+    <!-- Inline Styles (Optional, consider moving to CSS files) -->
+    <style>
+        /* Your existing styles... */
+
+        #game-container {
+            position: relative;
+            border-radius: 15px;
+            overflow: hidden;
+            /* Add any existing styles for game-container */
+        }
+        #game-info {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            /* Add any existing styles for game-info */
+        }
+        #pause-menu {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            display: none;
+        }
+        #pause-menu button {
+            margin: 10px;
+            padding: 5px 10px;
+        }
+        #shop {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            border: 2px solid #fff;
+            border-radius: 10px;
+            overflow: auto;
+            margin: 0;
+            padding: 0;
+        }
+        #shop-h2 {
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+        #shop-items {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        .shop-item {
+            background-color: #333;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            width: 150px;
+        }
+        .shop-item button {
+            margin-top: 10px;
+            padding: 5px 10px;
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+        .shop-item button:hover {
+            background-color: #45a049;
+        }
+        #close-shop-button {
+            padding: 10px 20px;
+            cursor: pointer;
+            background-color: #f44336;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+        #close-shop-button:hover {
+            background-color: #da190b;
+        }
+    </style>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="game-container">
+        <canvas id="game-canvas"></canvas>
+        <div id="game-info">
+            <div id="round-container">Round: <span id="round">1</span></div>
+            <div id="gold-container">Gold: <span id="gold">0</span></div>
+        </div>
+        
+        <!-- Updated Score and Target Score Display -->
+        <div id="score-target-display">
+            <div class="score-label">Score</div>
+            <div class="score-number" id="score">0</div>
+            <div class="target-score-label">Target Score:</div>
+            <div class="target-score-number" id="target-score">0</div>
+        </div>
+        
+        <div id="game-over" class="hidden">
+            <h2>Game Over</h2>
+            <p>Your final score: <span id="final-score"></span></p>
+            <button id="restart-button">Play Again</button>
+        </div>
+        <div id="pause-menu">
+            <h2>Paused</h2>
+            <button id="resume-button">Resume</button>
+            <button id="mute-button">Mute Music</button>
+            <button id="quit-button">Quit Game</button>
+        </div>
+        <div id="shop" class="hidden">
+            <h2>Shop</h2>
+            <div id="shop-items">
+                <!-- Shop items will be dynamically inserted here -->
+            </div>
+            <button id="close-shop-button">Close Shop</button>
+        </div>
+        <audio id="background-music" loop>
+            <source src="audio/background-music.mp3" type="audio/mpeg">
+            Your browser does not support the audio element.
+        </audio>
+        
+        <!-- New Bucket Container -->
+        <div id="bucket-container">
+            <canvas id="bucket-canvas"></canvas>
+        </div>
+        
+        <!-- Use type="module" and point to main.js -->
+        <script type="module" src="js/main.js"></script>
+        
+    </div>
+</body>
+</html>

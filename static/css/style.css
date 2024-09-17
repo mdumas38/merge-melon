@@ -5,34 +5,81 @@ body {
     justify-content: center;
     align-items: center;
     height: 100vh;
-    background-color: #f0f0f0;
+    background-color: #00000000;
     font-family: Arial, sans-serif;
 }
 
 #game-container {
-    position: relative;
+    width: var(--canvas-width); /* Updated width to match CANVAS_WIDTH */
+    height: var(--canvas-height); /* Updated height to match CANVAS_HEIGHT */
+    position: relative; /* Ensures child elements are positioned relative to this container */
+    background-image: url('/static/images/game-background.png'); /* Ensure this image scales correctly */
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    border-radius: 15px; /* Rounded corners for the game container */
+    overflow: hidden; /* Ensures child elements don't overflow the rounded corners */
+    border: 5px solid #FFD700; /* Added a gold border for a professional look */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Added a subtle box shadow for depth */
 }
 
 #game-canvas {
-    border: 2px solid #333;
-    background-color: #fff;
+    border: 1px solid #353434;
+    border-radius: 15px; /* Rounded corners for canvases */
 }
 
+/* Improved layout and styling for game information display */
 #game-info {
     display: flex;
-    justify-content: space-between;
-    padding: 10px;
-    background-color: rgba(0, 0, 0, 0.7);
-    color: #fff;
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
+    justify-content: space-around; /* Evenly distribute space around items */
+    align-items: center; /* Vertically center items */
+    padding: 15px 20px; /* Increased padding for better spacing */
+    background-color: rgba(0, 0, 0, 0.8); /* Darker background for contrast */
+    color: #FFD700; /* Gold color for a premium look */
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Professional font */
+    font-size: 20px; /* Increased font size for readability */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* Subtle shadow for depth */
+    border-radius: 10px; /* Rounded corners */
 }
 
-#score-container, #round-container {
-    font-size: 18px;
+/* Styling for individual info containers */
+#score-container, #round-container, #target-score-container, #lives, #gold-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 0 15px; /* Horizontal margin for spacing */
+}
+
+/* Labels styling */
+#score-container .score-label,
+#round-container .score-label,
+#target-score-container .target-score-label,
+#lives .score-label,
+#gold-container .score-label {
+    font-size: 16px; /* Slightly smaller for hierarchy */
+    color: #FFFFFF; /* White color for labels */
+    text-shadow: 1px 1px #000; /* Text shadow for readability */
+    margin-bottom: 5px; /* Space below labels */
+}
+
+/* Numbers styling */
+#score-container .score-number,
+#round-container .score-number,
+#target-score-container .target-score-number,
+#lives .score-number,
+#gold-container .score-number {
+    font-size: 28px; /* Larger size for emphasis */
     font-weight: bold;
+    color: #FFD700; /* Gold color for numbers */
+    text-shadow: 2px 2px #000; /* Enhanced shadow for prominence */
+    animation: pulse 2s infinite; /* Subtle pulsing animation */
+}
+
+/* Pulse animation for emphasis */
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
 }
 
 #game-over {
@@ -44,10 +91,23 @@ body {
     padding: 20px;
     border-radius: 10px;
     text-align: center;
+    border: 2px solid #FFD700; /* Added border and shadow */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
 }
 
+/* Enhanced game over screen text */
 #game-over h2 {
-    margin-top: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #FFD700;
+    font-size: 2em;
+    margin-bottom: 10px;
+}
+
+#game-over p {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #333333;
+    font-size: 1.2em;
+    margin-bottom: 20px;
 }
 
 #restart-button {
@@ -65,5 +125,368 @@ body {
 }
 
 .hidden {
+    display: none !important;
+}
+
+/* Add styles for the bucket and lava */
+#bucket-container {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 200px; /* Top width */
+    height: 100px; /* Height of the bucket */
+}
+
+#bucket-canvas {
+    width: 100%;
+    height: 100%;
+    border-radius: 15px; /* Rounded corners for canvases */
+}
+
+#lava {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 20px; /* Matches LAVA_HEIGHT in JS */
+    background-color: #FF4500; /* Lava color */
+    z-index: 100; /* Ensure lava is visible above other elements */
+}
+
+#lives {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    font-size: 20px;
+    color: #FFFFFF;
+    background: rgba(0, 0, 0, 0.5);
+    padding: 5px 10px;
+    border-radius: 5px;
+}
+
+/* Boundary styling */
+.boundary {
+    position: absolute;
+    background-color: #2E8B57; /* Same as side boundaries in JS */
+}
+
+#gold-container {
+    font-size: 18px;
+    font-weight: bold;
+}
+
+#shop {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(0%, 0%); /* Centers the shop both horizontally and vertically */
+    width: 80%; /* 80% of the game container's width */
+    height: 80%; /* 80% of the game container's height */
+    max-width: 100%; /* Prevents the shop from exceeding the game container's width */
+    max-height: 100%; /* Prevents the shop from exceeding the game container's height */
+    background-color: rgba(0, 0, 0, 0.9);
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    border: 2px solid #FFD700; /* Added border and shadow */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    border-radius: 10px; /* Optional: Rounds the corners for a smoother look */
+    overflow: auto; /* Allows scrolling if content exceeds the shop's size */
+    margin: 0; /* Removes any default margins that might cause offset */
+    padding: 0; /* Removes any default padding that might cause offset */
+}
+
+/* Updated shop title */
+#shop h2 {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #FFD700;
+    font-size: 2em;
+    margin-bottom: 20px;
+}
+
+#shop-items {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); /* Responsive grid layout */
+    gap: 20px;
+    justify-items: center;
+    width: 90%; /* Takes full width of the shop */
+    padding: 0 10px; /* Adds horizontal padding for spacing */
+}
+
+.shop-item {
+    background-color: #444;
+    border: 2px solid #FFD700; /* Added gold border */
+    border-radius: 10px;
+    padding: 10px;
+    width: 100%; /* Makes the item responsive within the grid */
+    max-width: 150px; /* Prevents excessive width */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.shop-item:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(255, 215, 0, 0.5); /* Added gold glow on hover */
+}
+
+.item-details {
+    text-align: center;
+    margin-bottom: 0px;
+}
+
+.item-name {
+    color: #FFD700;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.item-cost {
+    color: #fff;
+}
+
+.buy-button {
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    padding: 8px 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.buy-button:hover {
+    background-color: #45a049;
+}
+
+.buy-button:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}
+
+#close-shop-button {
+    display: block;
+    margin: 5px auto 0;
+    padding: 15px 30px; /* Increased padding for more space around the text */
+    background-color: #f44336;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+#close-shop-button:hover {
+    background-color: #d32f2f;
+}
+
+#target-score-container {
+    font-size: 18px;
+    font-weight: bold;
+    margin-left: 20px;
+}
+
+/* Add styles for the bucket and lava */
+#bucket-container {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 200px; /* Top width */
+    height: 100px; /* Height of the bucket */
+}
+
+#bucket-canvas {
+    width: 100%;
+    height: 100%;
+}
+
+#lava {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 20px; /* Matches LAVA_HEIGHT in JS */
+    background-color: #FF4500; /* Lava color */
+    z-index: 100; /* Ensure lava is visible above other elements */
+}
+
+#lives {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    font-size: 20px;
+    color: #FFFFFF;
+    background: rgba(0, 0, 0, 0.5);
+    padding: 5px 10px;
+    border-radius: 5px;
+}
+
+/* Boundary styling */
+.boundary {
+    position: absolute;
+    background-color: #2E8B57; /* Same as side boundaries in JS */
+}
+
+.ball-container {
+    width: 60px;
+    height: 60px;
+    margin-bottom: 0px;
+}
+
+#close-shop-button {
+    display: block;
+    margin: 5px auto 0;
+    padding: 15px 30px; /* Increased padding for more space around the text */
+    background-color: #f44336;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+#close-shop-button:hover {
+    background-color: #d32f2f;
+}
+
+/* New Score Display Styles */
+#score-display {
+    position: absolute;
+    top: 50%;
+    left: 20px;
+    transform: translateY(-50%);
+    text-align: center;
+    color: #FFD700; /* Gold color for visibility */
+    font-family: 'Press Start 2P', cursive;
+}
+
+.score-label {
+    font-size: 20px;
+    margin-bottom: 5px;
+    text-shadow: 2px 2px #000;
+}
+
+.score-number {
+    font-size: 48px; /* Very large for emphasis */
+    font-weight: bold;
+    animation: flash 1s infinite;
+    text-shadow: 2px 2px #000;
+}
+
+/* Flashy Animation for Score Number */
+@keyframes flash {
+    0% { color: #FFD700; }
+    50% { color: #FF4500; }
+    100% { color: #FFD700; }
+}
+
+/* Updated Score and Target Score Display Styles */
+#score-target-display {
+    position: absolute;
+    top: 15%; /* Moved higher up on the screen */
+    left: 20px;
+    transform: translateY(0); /* Removed translateY to prevent downward shift */
+    text-align: left;
+    color: #FFFFFF; /* White color for visibility */
+    font-family: 'Press Start 2P', cursive;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.score-label {
+    font-size: 18px; /* Slightly larger for prominence */
+    margin-bottom: 5px;
+    text-shadow: 1px 1px #000;
+}
+
+.score-number {
+    font-size: 48px; /* Very large for emphasis */
+    font-weight: bold;
+    animation: flash 1s infinite;
+    text-shadow: 2px 2px #000;
+}
+
+.target-score-label {
+    font-size: 14px; /* Smaller font size for subtlety */
+    margin-top: 10px; /* Adds space between score and target score */
+    font-family: Arial, sans-serif;
+    text-shadow: 1px 1px #000;
+}
+
+.target-score-number {
+    font-size: 24px; /* Smaller and more subdued */
+    font-weight: bold;
+    color: #FFFFFF; /* Keep it white */
+    font-family: Arial, sans-serif;
+    text-shadow: 1px 1px #000;
+    /* Removed flashing animation for target score */
+}
+
+/* Flashy Animation for Score Number Only */
+@keyframes flash {
+    0% { color: #FFD700; }
+    50% { color: #FF4500; }
+    100% { color: #FFD700; }
+}
+
+/* Enhanced button styles for a more polished appearance */
+button {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 1em; /* Consistent font size */
+    color: #FFFFFF; /* White text for buttons */
+    text-transform: uppercase; /* Uppercase for consistency */
+    transition: transform 0.2s, background-color 0.2s;
+}
+
+button:hover {
+    transform: scale(1.05);
+    background-color: #FFD700;
+    color: #000;
+}
+
+/* Updated pause menu styling */
+#pause-menu {
+    /* Added border and shadow */
+    border: 2px solid #FFD700;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    
+    /* Existing styles */
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 20px;
+    border-radius: 10px;
+    text-align: center;
     display: none;
 }
+
+/* Responsive adjustments for smaller screens */
+@media (max-width: 768px) {
+    #game-info {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    #score-container, #round-container, #target-score-container, #lives, #gold-container {
+        margin: 10px 0; /* Vertical margin for spacing */
+    }
+
+    #score-container .score-number,
+    #round-container .score-number,
+    #target-score-container .target-score-number,
+    #lives .score-number,
+    #gold-container .score-number {
+        font-size: 24px; /* Adjusted font size for smaller screens */
+    }
+}
+
