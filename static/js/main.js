@@ -54,23 +54,43 @@ function preloadImages(characters) {
 
 
 function initDeck() {
-    deck = [];
+    console.log("Initializing deck...");
+    console.log(`Current deck length before initialization: ${deck.length}`);
+    console.log(`Current purchasedBalls: [${purchasedBalls.map(item => item.name).join(', ')}]`);
 
-    for (let i = 0; i < INITIAL_DECK_VALUES.length; i++) {
-        const randomIndex = Math.floor(Math.random() * ALL_PIECE_TYPES.length);
-        const character = ALL_PIECE_TYPES[randomIndex];
-        deck.push(createPiece(character));
+    // If the deck is empty, initialize it
+    if (deck.length === 0) {
+        // Add initial pieces based on INITIAL_DECK_VALUES
+        for (let i = 0; i < INITIAL_DECK_VALUES.length; i++) {
+            const randomIndex = Math.floor(Math.random() * ALL_PIECE_TYPES.length);
+            const character = ALL_PIECE_TYPES[randomIndex];
+            deck.push(createPiece(character));
+            console.log(`Added ${character.name} to deck.`);
+        }
     }
 
-    deck = shuffleArray([...deck, ...purchasedBalls]);
+    // Add any newly purchased balls to the deck
+    deck = [...deck, ...purchasedBalls];
+    console.log(`Added ${purchasedBalls.length} purchased item(s) to deck.`);
+    purchasedBalls = []; // Clear the purchased balls array
 
-    console.log("Initialized deck:", deck);
+    // Shuffle the deck
+    shuffleArray(deck);
+    console.log(`Shuffled deck: [${deck.map(piece => piece.name).join(', ')}]`);
 
+    console.log("Updated deck after initialization:", deck);
+
+    // If the deck is still empty after initialization, add a default piece
     if (deck.length === 0) {
         console.warn("Deck is empty after initialization. Adding default piece.");
         const defaultPiece = ALL_PIECE_TYPES[0];
         deck.push(createPiece(defaultPiece));
+        console.log(`Added default piece: ${defaultPiece.name} to deck.`);
     }
+
+    console.log("Deck during initDeck:", deck);
+    console.log("Purchased Balls during initDeck:", purchasedBalls);
+    console.log("ALL_PIECE_TYPES:", ALL_PIECE_TYPES);
 }
 
 // Initialize the game
@@ -83,12 +103,13 @@ function init() {
     ctx = canvas.getContext('2d');
     canvas.width = CANVAS_WIDTH;
     canvas.height = CANVAS_HEIGHT;
+    console.log(`Initialized canvas with width ${CANVAS_WIDTH} and height ${CANVAS_HEIGHT}.`);
 
     pieces = [];
     score = 0;
     round = 1;
     gameOver = false;
-    targetScore = 0;
+    targetScore = 1;
 
     updateTargetScore();
     preloadImages(ALL_PIECE_TYPES);
@@ -114,7 +135,7 @@ function init() {
     spawnPiece();
 
     lastTime = performance.now();
-
+    console.log("Starting game loop...");
     gameLoop();
     startBackgroundMusic();
 
@@ -125,24 +146,39 @@ function init() {
     document.addEventListener('keydown', (e) => {
         if (e.key === 'p' || e.key === 'P') {
             togglePause();
+            console.log(`Game ${isPaused ? 'paused' : 'resumed'}.`);
         }
     });
 
     // Event listeners for pause menu buttons
-    resumeButton.addEventListener('click', resumeGame);
+    resumeButton.addEventListener('click', () => {
+        resumeGame();
+        console.log("Resumed game from pause menu.");
+    });
     muteButton.addEventListener('click', () => toggleBackgroundMusic(backgroundMusic, muteButton));
     quitButton.addEventListener('click', () => {
+        console.log("Quitting game. Reloading page.");
         location.reload();
     });
 
     // Event listener for closing the shop
     closeShopButton.addEventListener('click', () => {
-        closeShop(shop);
+        closeShop(shop, 
+            (value) => { isPaused = value; },
+            initDeck,
+            spawnPiece,
+            () => {
+                lastTime = performance.now();
+                gameLoop();
+            }
+        );
+        console.log("Closed shop window.");
         nextRoundPhase2();
     });
 
     // Event listener for restarting the game
     restartButton.addEventListener('click', () => {
+        console.log("Restarting game...");
         gameOverDiv.classList.add('hidden');
         init();
     });
@@ -210,7 +246,7 @@ function togglePause() {
 function spawnPiece() {
     if (deck.length > 0) {
         const pieceFromDeck = deck.shift();
-        console.log('Spawning piece:', pieceFromDeck);
+        console.log(`Spawning piece from deck: ${pieceFromDeck.name} (Value: ${pieceFromDeck.attributes.value})`);
 
         currentPiece = {
             ...pieceFromDeck,
@@ -229,7 +265,10 @@ function spawnPiece() {
 
 // Main game loop
 function gameLoop(currentTime) {
-    if (gameOver) return;
+    if (gameOver) {
+        console.log("Game Over!");
+        return;
+    }
 
     if (isPaused) {
         lastTime = currentTime;
@@ -245,9 +284,46 @@ function gameLoop(currentTime) {
             aimY,
             drawTrajectoryLines,
         });
+
+        // Optionally, log the current score and round every second
+        if (Math.floor(currentTime / 1000) !== Math.floor(lastTime / 1000)) {
+            console.log(`Time: ${Math.floor(currentTime / 1000)}s | Score: ${score} | Round: ${round}`);
+        }
     }
 
     animationId = requestAnimationFrame(gameLoop);
+}
+
+// Check for merges
+export function checkMerge(existingPiece, releasedPiece) {
+    console.log(`Attempting to merge: ${existingPiece.name} (Value: ${existingPiece.attributes.value}) & ${releasedPiece.name} (Value: ${releasedPiece.attributes.value})`);
+
+    if (
+        existingPiece.attributes.value === releasedPiece.attributes.value &&
+        !existingPiece.merging &&
+        !releasedPiece.merging
+    ) {
+        const newPieceType = ALL_PIECE_TYPES.find(
+            (pt) => pt.attributes.value === existingPiece.attributes.value * 2
+        );
+
+        if (newPieceType) {
+            console.log(`Found new piece type for merging: ${newPieceType.name} (Value: ${newPieceType.attributes.value})`);
+            startMergeAnimation(existingPiece, releasedPiece, newPieceType);
+            score += newPieceType.attributes.value;
+            updateScore();
+            playSound(mergeSound); // Use the playSound function from audio.js
+        } else {
+            console.warn(`No piece found with value ${existingPiece.attributes.value * 2} to merge into.`);
+        }
+    } else {
+        if (existingPiece.attributes.value !== releasedPiece.attributes.value) {
+            console.log(`Cannot merge: Different values (${existingPiece.attributes.value} vs ${releasedPiece.attributes.value}).`);
+        }
+        if (existingPiece.merging || releasedPiece.merging) {
+            console.log(`Cannot merge: One or both pieces are already merging.`);
+        }
+    }
 }
 
 // Update game state
@@ -357,15 +433,19 @@ function nextRoundPhase1() {
         updateGold();
         round++;
         updateRound();
-        targetScore += 50;
+        targetScore = targetScore * 2;
         updateTargetScore();
-        openShop(shop, shopItemsContainer, ALL_PIECE_TYPES);
+        openShop(shop, shopItemsContainer, ALL_PIECE_TYPES, 
+            (value) => { isPaused = value; },
+            () => { cancelAnimationFrame(animationId); }
+        );
     } else {
         endGame();
     }
 }
 
 function nextRoundPhase2() {
+    console.log("Initializing deck for the next round...");
     initDeck();
     spawnPiece();
 }
@@ -382,8 +462,11 @@ shopItemsContainer.addEventListener('click', (e) => {
             gold -= item.attributes.cost;
             updateGold();
 
-            // Add the purchased character to spawnablePieceTypes
+            // Add the purchased character to ALL_PIECE_TYPES
             ALL_PIECE_TYPES.push(item);
+
+            // **Add the purchased item to purchasedBalls to replenish the deck in the next round**
+            purchasedBalls.push(item);
 
             // Disable the button
             e.target.disabled = true;
@@ -393,6 +476,32 @@ shopItemsContainer.addEventListener('click', (e) => {
         }
     }
 });
+
+// Add the startMergeAnimation function to handle merging of pieces
+function startMergeAnimation(existingPiece, releasedPiece, newPieceType) {
+    console.log(`Starting merge animation: ${existingPiece.name} + ${releasedPiece.name} -> ${newPieceType.name}`);
+
+    // Mark both pieces as merging to prevent further interactions
+    existingPiece.merging = true;
+    releasedPiece.merging = true;
+
+    // Create the new merged piece at the average position of the two
+    const mergedPiece = createPiece(newPieceType);
+    mergedPiece.x = (existingPiece.x + releasedPiece.x) / 2;
+    mergedPiece.y = (existingPiece.y + releasedPiece.y) / 2;
+
+    // Optionally, add visual effects or animations here
+
+    // Add the merged piece after a short delay to allow animations
+    setTimeout(() => {
+        pieces.push(mergedPiece);
+        console.log(`Merged into new piece: ${mergedPiece.name} at (${mergedPiece.x}, ${mergedPiece.y})`);
+
+        // Remove the original pieces from the game
+        pieces = pieces.filter(piece => piece !== existingPiece && piece !== releasedPiece);
+        console.log(`Removed merged pieces: ${existingPiece.name} & ${releasedPiece.name}`);
+    }, 500); // Adjust the delay as needed for animations
+}
 
 // Initial setup function
 init();

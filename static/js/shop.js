@@ -1,6 +1,4 @@
-// shop.js
-
-export function openShop(shop, shopItemsContainer, SHOP_ITEMS) {
+export function openShop(shop, shopItemsContainer, SHOP_ITEMS, setIsPaused, cancelAnimation) {
     shopItemsContainer.innerHTML = ''; // Clear previous items
 
     SHOP_ITEMS.forEach((item, index) => {
@@ -34,10 +32,17 @@ export function openShop(shop, shopItemsContainer, SHOP_ITEMS) {
 
     // Show the shop
     shop.classList.remove('hidden');
+    setIsPaused(true);
+    cancelAnimation();
 }
 
-export function closeShop(shop) {
+export function closeShop(shop, setIsPaused, initDeck, spawnPiece, startGameLoop) {
     shop.classList.add('hidden');
+    setIsPaused(false);
+
+    initDeck();
+    spawnPiece();
+    startGameLoop();
 }
 
 // Function to draw character images in the shop

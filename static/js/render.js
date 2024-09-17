@@ -5,6 +5,7 @@ export function drawPiece(ctx, piece, imageCache) {
     ctx.save();
     ctx.translate(piece.x, piece.y);
     ctx.scale(piece.animationScale || 1, piece.animationScale || 1);
+    ctx.rotate(piece.rotation); // Rotate the entire piece for synchronized rotation
 
     // Clipping path for the piece
     ctx.beginPath();
@@ -38,8 +39,8 @@ export function drawPiece(ctx, piece, imageCache) {
     ctx.rotate(piece.rotation);
 
     const earsImg = imageCache[`${piece.name}_ears`];
-    if (earsImg && earsImg.complete) {
-        ctx.drawImage(earsImg, -piece.attributes.radius, -piece.attributes.radius - 11, piece.attributes.radius * 2, piece.attributes.radius);
+    if (earsImg && earsImg.complete && piece.earsImage !== null) {
+        ctx.drawImage(earsImg, -piece.attributes.radius, -piece.attributes.radius - (piece.attributes.radius / 2 - 3), piece.attributes.radius * 2, piece.attributes.radius);
     }
 
     ctx.restore();
@@ -115,11 +116,13 @@ export function render(ctx, pieces, currentPiece, particles, imageCache, config)
     // Draw pieces
     for (const piece of pieces) {
         drawPiece(ctx, piece, imageCache);
+        console.log(`Rendering ${piece.name} at (${piece.x.toFixed(2)}, ${piece.y.toFixed(2)})`);
     }
 
     // Draw current piece if it's not merging
     if (currentPiece && !currentPiece.merging) {
         drawPiece(ctx, currentPiece, imageCache);
+        console.log(`Rendering current piece: ${currentPiece.name} at (${currentPiece.x.toFixed(2)}, ${currentPiece.y.toFixed(2)})`);
     }
 
     // Draw particles

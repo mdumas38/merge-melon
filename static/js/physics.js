@@ -1,5 +1,6 @@
 // physics.js
-import { GRAVITY, FRICTION, BOUNCE_FACTOR, ROTATION_FRICTION, SPEED_THRESHOLD, ANGULAR_VELOCITY_THRESHOLD, VELOCITY_THRESHOLD, CANVAS_WIDTH, CANVAS_HEIGHT } from './config.js';
+import { GRAVITY, FRICTION, BOUNCE_FACTOR, ROTATION_FRICTION, SPEED_THRESHOLD, ANGULAR_VELOCITY_THRESHOLD, VELOCITY_THRESHOLD, CANVAS_WIDTH, CANVAS_HEIGHT, TORQUE_FACTOR } from './config.js';
+import { checkMerge } from './main.js';
 
 export function applyGravity(piece, deltaTime) {
     piece.vy += GRAVITY * deltaTime;
@@ -17,6 +18,8 @@ export function handleCollision(piece1, piece2) {
     const overlap = piece1.attributes.radius + piece2.attributes.radius - distance;
 
     if (overlap > 0) {
+        console.log(`Collision detected between ${piece1.name} and ${piece2.name}. Overlap: ${overlap.toFixed(2)}px`);
+
         const mtvX = (dx / distance) * overlap;
         const mtvY = (dy / distance) * overlap;
 
@@ -44,6 +47,14 @@ export function handleCollision(piece1, piece2) {
         piece2.vx = (tangentX * dpTan2 + normalX * m2) * FRICTION;
         piece2.vy = (tangentY * dpTan2 + normalY * m2) * FRICTION;
 
+        // Compute angular velocity changes based on tangential component
+        piece1.angularVelocity += dpTan1 * TORQUE_FACTOR;
+        piece2.angularVelocity += dpTan2 * TORQUE_FACTOR;
+
+        // Apply rotation friction
+        piece1.angularVelocity *= ROTATION_FRICTION;
+        piece2.angularVelocity *= ROTATION_FRICTION;
+
         if (Math.abs(piece1.vx) > VELOCITY_THRESHOLD || Math.abs(piece1.vy) > VELOCITY_THRESHOLD) {
             piece1.isAtRest = false;
         }
@@ -55,12 +66,17 @@ export function handleCollision(piece1, piece2) {
         if (piece1.ability === "Bounce Boost" && !piece1.abilityActive) {
             piece1.vy *= 1.5;
             piece1.abilityActive = true;
+            console.log(`${piece1.name}'s ability 'Bounce Boost' activated!`);
         }
 
         if (piece2.ability === "Bounce Boost" && !piece2.abilityActive) {
             piece2.vy *= 1.5;
             piece2.abilityActive = true;
+            console.log(`${piece2.name}'s ability 'Bounce Boost' activated!`);
         }
+
+        // After resolving collision, check for merging
+        checkMerge(piece1, piece2);
     }
 }
 
