@@ -1,12 +1,14 @@
 // main.js
-import { CANVAS_WIDTH, CANVAS_HEIGHT, ALL_PIECE_TYPES, THROW_COOLDOWN, SPAWN_Y, POWER_SCALING_FACTOR, POWER_MULTIPLIER, MAX_VELOCITY, END_ROUND_COOLDOWN, BOUNCE_FACTOR, FRICTION, INITIAL_DECK_VALUES } from './config.js';
+import { CANVAS_WIDTH, CANVAS_HEIGHT, ALL_PIECE_TYPES, THROW_COOLDOWN, SPAWN_Y, 
+    POWER_SCALING_FACTOR, POWER_MULTIPLIER, MAX_VELOCITY, END_ROUND_COOLDOWN, 
+    BOUNCE_FACTOR, FRICTION, INITIAL_DECK_VALUES, CHARACTER_FAMILIES } from './config.js';
 import { createPiece, shuffleArray } from './piece.js';
 import { applyGravity, applyFriction, handleCollision, updateRotation } from './physics.js';
 import { render, drawTrajectoryLines } from './render.js';
 import { handleMouseMove, handleMouseUp } from './input.js';
 import { openShop, closeShop } from './shop.js';
 import { playSound, toggleBackgroundMusic } from './audio.js';
-
+import { preloadImages } from './imageLoader.js';
 // Game variables
 let canvas, ctx, pieces, currentPiece, score, round, gameOver, targetScore;
 let lastTime, animationId;
@@ -27,6 +29,7 @@ const shopItemsContainer = document.getElementById('shop-items');
 const closeShopButton = document.getElementById('close-shop-button');
 const restartButton = document.getElementById('restart-button');
 const gameOverDiv = document.getElementById('game-over');
+const characters = CHARACTER_FAMILIES.animals.characters;
 
 let isPaused = false;
 let animationScale = 1;
@@ -37,21 +40,7 @@ const mergeSound = new Audio('/static/audio/merge.mp3');
 const launchSound = new Audio('/static/audio/drop.mp3');
 const gameOverSound = new Audio('/static/audio/gameover.mp3');
 
-// Preload images
-function preloadImages(characters) {
-    characters.forEach(character => {
-        const faceImg = new Image();
-        faceImg.src = character.faceImage;
-        imageCache[`${character.name}_face`] = faceImg;
-
-        const earsImg = new Image();
-        earsImg.src = character.earsImage;
-        imageCache[`${character.name}_ears`] = earsImg;
-    });
-}
-
 // Initialize the deck
-
 
 function initDeck() {
     console.log("Initializing deck...");
@@ -112,7 +101,27 @@ function init() {
     targetScore = 1;
 
     updateTargetScore();
-    preloadImages(ALL_PIECE_TYPES);
+    preloadImages(ALL_PIECE_TYPES, (cache1) => {
+        if (Object.keys(cache1).length === 0) {
+            console.error('No images were loaded for ALL_PIECE_TYPES. Check your image paths.');
+            return;
+        }
+        // Merge cache1 into imageCache
+        imageCache = { ...imageCache, ...cache1 };
+
+        // Preload images for characters
+        preloadImages(characters, (cache2) => {
+            if (Object.keys(cache2).length === 0) {
+                console.error('No images were loaded for characters. Check your image paths.');
+                return;
+            }
+            // Merge cache2 into imageCache
+            imageCache = { ...imageCache, ...cache2 };
+
+            // Start the game loop with the combined imageCache
+            startGameLoop(imageCache);
+        });
+    });
     updateScore();
     updateRound();
 
@@ -437,7 +446,8 @@ function nextRoundPhase1() {
         updateTargetScore();
         openShop(shop, shopItemsContainer, ALL_PIECE_TYPES, 
             (value) => { isPaused = value; },
-            () => { cancelAnimationFrame(animationId); }
+            () => { cancelAnimationFrame(animationId); },
+            imageCache
         );
     } else {
         endGame();
@@ -500,7 +510,22 @@ function startMergeAnimation(existingPiece, releasedPiece, newPieceType) {
         // Remove the original pieces from the game
         pieces = pieces.filter(piece => piece !== existingPiece && piece !== releasedPiece);
         console.log(`Removed merged pieces: ${existingPiece.name} & ${releasedPiece.name}`);
-    }, 500); // Adjust the delay as needed for animations
+    }, 50); // Adjust the delay as needed for animations
+}
+
+function startGameLoop(imageCache) {
+    function gameLoop() {
+        // Your game loop logic
+        render(ctx, pieces, currentPiece, particles, imageCache, {
+            CANVAS_WIDTH,
+            CANVAS_HEIGHT,
+            aimX,
+            aimY,
+            drawTrajectoryLines,
+        });
+        requestAnimationFrame(gameLoop);
+    }
+    gameLoop();
 }
 
 // Initial setup function

@@ -30,7 +30,7 @@ export const CHARACTER_FAMILIES = {
             {
                 name: "Ladybug",
                 faceImage: "/static/images/characters/ladybug/ladybug_face.png",
-                earsImage: null,
+                features: [],
                 ability: null,
                 attributes: {
                     radius: 15,
@@ -44,7 +44,15 @@ export const CHARACTER_FAMILIES = {
             {
                 name: "Mouse",
                 faceImage: "/static/images/characters/mouse/mouse_face.png",
-                earsImage: "/static/images/characters/mouse/mouse_ears.png",
+                features: [
+                    {
+                        type: "ears",
+                        image: "/static/images/characters/mouse/mouse_ears.png",
+                        position: { x: 0, y: -20 },
+                        widthFactor: 2,
+                        heightFactor: 1
+                    }
+                ],
                 ability: "Bounce Boost",
                 attributes: {
                     radius: 20,
@@ -58,7 +66,7 @@ export const CHARACTER_FAMILIES = {
             {
                 name: "Bird",
                 faceImage: "/static/images/characters/bird/bird_face.png",
-                earsImage: null,
+                features: [],
                 ability: "Ladybug Eater",
                 attributes: {
                     radius: 25,
@@ -72,7 +80,22 @@ export const CHARACTER_FAMILIES = {
             {
                 name: "Rabbit",
                 faceImage: "/static/images/characters/rabbit/rabbit_face.png",
-                earsImage: "/static/images/characters/rabbit/rabbit_ears.png",
+                features: [
+                    {
+                        type: "ears",
+                        image: "/static/images/characters/rabbit/rabbit_ears.png",
+                        position: { x: 0, y: -38 }, // Positioned at the top of the Rabbit
+                        widthFactor: 2,  // 50% of the Rabbit's radius (15 pixels for radius 30)
+                        heightFactor: 1  // 30% of the Rabbit's radius (9 pixels for radius 30)
+                    },
+                    {
+                        type: "feet",
+                        image: "/static/images/characters/rabbit/rabbit_feet.png",
+                        position: { x: 0, y: 30 }, // Positioned at the bottom of the Rabbit
+                        widthFactor: 1,  // 50% of the Rabbit's radius (15 pixels for radius 30)
+                        heightFactor: .5  // 30% of the Rabbit's radius (9 pixels for radius 30)
+                    }
+                ],
                 ability: "Single Jump",
                 attributes: {
                     radius: 30,
@@ -86,7 +109,15 @@ export const CHARACTER_FAMILIES = {
             {
                 name: "Fox",
                 faceImage: "/static/images/characters/fox/fox_face.png",
-                earsImage: "/static/images/characters/fox/fox_ears.png",
+                features: [
+                    {
+                        type: "ears",
+                        image: "/static/images/characters/fox/fox_ears.png",
+                        position: { x: 0, y: -32 },
+                        widthFactor: 2,  // Proportional to the fox's radius (35)
+                        heightFactor: 1
+                    }
+                ],
                 ability: "Unpredictable Bounce",
                 attributes: {
                     radius: 35,
@@ -100,7 +131,7 @@ export const CHARACTER_FAMILIES = {
             {
                 name: "Snake",
                 faceImage: "/static/images/characters/snake/snake_face.png",
-                earsImage: null,
+                features: [],
                 ability: "Slither Slide",
                 attributes: {
                     radius: 40,
@@ -114,7 +145,15 @@ export const CHARACTER_FAMILIES = {
             {
                 name: "Eagle",
                 faceImage: "/static/images/characters/eagle/eagle_face.png",
-                earsImage: "/static/images/characters/eagle/eagle_ears.png",
+                features: [
+                    {
+                        type: "feet",
+                        image: "/static/images/characters/eagle/eagle_feet.png",
+                        position: { x: -1, y: 46 }, // Positioned at the bottom
+                        widthFactor: 1,  // Proportional to the eagle's radius (45)
+                        heightFactor: .4
+                    },
+                ],
                 ability: "Swoop",
                 attributes: {
                     radius: 45,
@@ -128,7 +167,7 @@ export const CHARACTER_FAMILIES = {
             {
                 name: "Wolf",
                 faceImage: "/static/images/characters/wolf/wolf_face.png",
-                earsImage: null,
+                features: [],
                 ability: "Pack Strength",
                 attributes: {
                     radius: 50,
@@ -142,7 +181,16 @@ export const CHARACTER_FAMILIES = {
             {
                 name: "Lion",
                 faceImage: "/static/images/characters/lion/lion_face.png",
-                earsImage: "/static/images/characters/lion/lion_ears.png",
+                features: [
+                    {
+                        type: "mane",
+                        image: "/static/images/characters/lion/lion_mane.png",
+                        position: { x: 0, y: 0 }, // Centered around the face
+                        widthFactor: 3,    // Increased width
+                        heightFactor: 3,   // Increased height
+                        zIndex: 10000      // Higher z-index to appear on top
+                    },
+                ],
                 ability: "Roar",
                 attributes: {
                     radius: 55,

@@ -1,22 +1,82 @@
 // render.js
 import { CANVAS_WIDTH, CANVAS_HEIGHT, GRAVITY, FRICTION, BOUNCE_FACTOR } from './config.js';
-
+// Existing drawPiece function with updates to handle features and added debug logs
 export function drawPiece(ctx, piece, imageCache) {
+    
     ctx.save();
     ctx.translate(piece.x, piece.y);
     ctx.scale(piece.animationScale || 1, piece.animationScale || 1);
-    ctx.rotate(piece.rotation); // Rotate the entire piece for synchronized rotation
+    ctx.rotate(piece.rotation);
 
-    // Clipping path for the piece
+    // Iterate over each feature and draw it
+    if (piece.features && Array.isArray(piece.features)) {
+        piece.features.forEach((feature) => {
+            const key = `${piece.name}_${feature.type}`;
+            const featureImg = imageCache[key];
+
+            if (featureImg) {
+                if (featureImg.complete) {
+                    
+                    const posX = feature.position.x;
+                    const posY = feature.position.y;
+
+                    // Calculate feature size based on factors
+                    const drawWidth = feature.widthFactor ? piece.attributes.radius * feature.widthFactor : piece.attributes.radius * 2;
+                    const drawHeight = feature.heightFactor ? piece.attributes.radius * feature.heightFactor : piece.attributes.radius * 2;
+
+                    ctx.drawImage(
+                        featureImg,
+                        posX - drawWidth / 2, 
+                        posY - drawHeight / 2, 
+                        drawWidth, 
+                        drawHeight
+                    );
+                } else {
+                    console.warn(`Feature image for ${feature.type} of ${piece.name} is not loaded yet.`);
+                }
+            } else {
+                console.warn(`Feature image not found in imageCache with key: ${key} for ${piece.name}`);
+            }
+        });
+    } else {
+        console.log(`No features to draw for ${piece.name}.`);
+    }
+
+    // Clipping path for the main body/head
     ctx.beginPath();
     ctx.arc(0, 0, piece.attributes.radius, 0, Math.PI * 2);
     ctx.clip();
 
     // Draw face image
-    const faceImg = imageCache[`${piece.name}_face`];
-    if (faceImg && faceImg.complete) {
-        ctx.drawImage(faceImg, -piece.attributes.radius, -piece.attributes.radius, piece.attributes.radius * 2, piece.attributes.radius * 2);
+    const faceKey = `${piece.name}_face`;
+    const faceImg = imageCache[faceKey];
+
+    if (faceImg) {
+        if (faceImg.complete) {
+            ctx.drawImage(
+                faceImg, 
+                -piece.attributes.radius, 
+                -piece.attributes.radius, 
+                piece.attributes.radius * 2, 
+                piece.attributes.radius * 2
+            );
+        } else {
+            console.warn(`Face image for ${piece.name} is not loaded yet.`);
+            // Fallback: Draw colored circle
+            ctx.beginPath();
+            ctx.arc(0, 0, piece.attributes.radius, 0, Math.PI * 2);
+            ctx.fillStyle = piece.attributes.color;
+            ctx.fill();
+
+            // Draw value number
+            ctx.fillStyle = "#000000";
+            ctx.font = `${piece.attributes.radius}px Arial`;
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText(piece.attributes.value, 0, 0);
+        }
     } else {
+        console.warn(`Face image not found in imageCache with key: ${faceKey} for ${piece.name}`);
         // Fallback: Draw colored circle
         ctx.beginPath();
         ctx.arc(0, 0, piece.attributes.radius, 0, Math.PI * 2);
@@ -29,18 +89,6 @@ export function drawPiece(ctx, piece, imageCache) {
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
         ctx.fillText(piece.attributes.value, 0, 0);
-    }
-
-    ctx.restore();
-
-    // Draw ears
-    ctx.save();
-    ctx.translate(piece.x, piece.y);
-    ctx.rotate(piece.rotation);
-
-    const earsImg = imageCache[`${piece.name}_ears`];
-    if (earsImg && earsImg.complete && piece.earsImage !== null) {
-        ctx.drawImage(earsImg, -piece.attributes.radius, -piece.attributes.radius - (piece.attributes.radius / 2 - 3), piece.attributes.radius * 2, piece.attributes.radius);
     }
 
     ctx.restore();
@@ -122,7 +170,6 @@ export function render(ctx, pieces, currentPiece, particles, imageCache, config)
     // Draw current piece if it's not merging
     if (currentPiece && !currentPiece.merging) {
         drawPiece(ctx, currentPiece, imageCache);
-        console.log(`Rendering current piece: ${currentPiece.name} at (${currentPiece.x.toFixed(2)}, ${currentPiece.y.toFixed(2)})`);
     }
 
     // Draw particles
