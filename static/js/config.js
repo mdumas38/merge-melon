@@ -5,23 +5,25 @@ export const CANVAS_WIDTH = 700; // Adjust as needed
 export const CANVAS_HEIGHT = 900; // Adjust as needed
 
 // Game physics constants
-export const GRAVITY = 500; // pixels per second squared
-export const FRICTION = 0.995;
+export const GRAVITY = 980; // pixels per second squared
+export const FRICTION = 0.99;
 export const BOUNCE_FACTOR = 0.3;
 export const SPAWN_Y = 100;
 export const MAX_VELOCITY = 2000;
 export const POWER_MULTIPLIER = 1;
 export const POWER_SCALING_FACTOR = 30;
 export const ROTATION_FRICTION = 0.99;
-export const SPEED_THRESHOLD = 1;
+export const SPEED_THRESHOLD = 10;
 export const ANGULAR_VELOCITY_THRESHOLD = 0.01;
-export const VELOCITY_THRESHOLD = 0.1;
+export const VELOCITY_THRESHOLD = 100;
 export const END_ROUND_COOLDOWN = 2000;
 export const THROW_COOLDOWN = 500;
 export const TORQUE_FACTOR = 0.0008; // Adjust for more realistic rotation
 export const CONTAINER_WIDTH = 300;
 export const CONTAINER_HEIGHT = 600;
 export const SHOP_SIZE = 25; // Adjust based on how large you want characters in the shop
+export const SHOP_ITEMS = 3;
+
 
 
 
@@ -72,7 +74,7 @@ export const CHARACTER_FAMILIES = {
                 name: "Bird",
                 faceImage: "/static/images/characters/bird/bird_face.png",
                 features: [],
-                ability: "Ladybug Eater",
+                abilities: ["Float", "Eat"], // Updated abilities
                 attributes: {
                     radius: 25,
                     color: "#ADD8E6",

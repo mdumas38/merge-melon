@@ -192,6 +192,11 @@ export function render(ctx, pieces, currentPiece, particles, imageCache, config)
     // Draw pieces
     for (const piece of pieces) {
         drawPiece(ctx, piece, imageCache);
+        
+        // Visualize forces if debug mode is enabled and this is the selected piece
+        if (config.debugMode && piece === config.selectedPiece) {
+            drawForces(ctx, piece);
+        }
     }
 
     // Draw current piece if it's not merging
@@ -231,4 +236,40 @@ export function drawBoundaries(ctx, config) {
     ctx.strokeStyle = '#FFFFFF';
     ctx.lineWidth = 2;
     ctx.strokeRect(0, 0, config.CANVAS_WIDTH, config.CANVAS_HEIGHT);
+}
+
+// New function to draw force vectors
+function drawForces(ctx, piece) {
+    ctx.save();
+    ctx.strokeStyle = 'red';
+    ctx.fillStyle = 'red';
+    ctx.lineWidth = 2;
+    
+    // Starting point at the center of the piece
+    const originX = piece.x;
+    const originY = piece.y;
+    
+    piece.forces.forEach(force => {
+        const forceScale = 0.05; // Adjust scale for visibility
+        const endX = originX + force.x * forceScale;
+        const endY = originY + force.y * forceScale;
+        
+        // Draw force vector line
+        ctx.beginPath();
+        ctx.moveTo(originX, originY);
+        ctx.lineTo(endX, endY);
+        ctx.stroke();
+        
+        // Draw arrowhead
+        const angle = Math.atan2(endY - originY, endX - originX);
+        const arrowLength = 10;
+        ctx.beginPath();
+        ctx.moveTo(endX, endY);
+        ctx.lineTo(endX - arrowLength * Math.cos(angle - Math.PI / 6), endY - arrowLength * Math.sin(angle - Math.PI / 6));
+        ctx.lineTo(endX - arrowLength * Math.cos(angle + Math.PI / 6), endY - arrowLength * Math.sin(angle + Math.PI / 6));
+        ctx.lineTo(endX, endY);
+        ctx.fill();
+    });
+
+    ctx.restore();
 }

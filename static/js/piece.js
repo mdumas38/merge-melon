@@ -17,6 +17,8 @@ export function createPiece(character) {
         isAtRest: false,
         merging: false,
         absorbing: false,
+        forces: [], // Initialize forces array
+        hasJumped: false // Initialize hasJumped flag for abilities
     };
     console.log(`Created new piece: ${newPiece.name} at (${newPiece.x}, ${newPiece.y})`);
     return newPiece;

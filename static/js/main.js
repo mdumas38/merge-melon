@@ -1,7 +1,8 @@
 // main.js
 import { CANVAS_WIDTH, CANVAS_HEIGHT, ALL_PIECE_TYPES, THROW_COOLDOWN, SPAWN_Y, 
     POWER_SCALING_FACTOR, POWER_MULTIPLIER, MAX_VELOCITY, END_ROUND_COOLDOWN, 
-    BOUNCE_FACTOR, FRICTION, INITIAL_DECK_VALUES, CHARACTER_FAMILIES, CONTAINER } from './config.js';
+    BOUNCE_FACTOR, FRICTION, INITIAL_DECK_VALUES, CHARACTER_FAMILIES, CONTAINER, 
+    SHOP_ITEMS} from './config.js';
 import { createPiece, shuffleArray } from './piece.js';
 import { applyGravity, applyFriction, handleCollision, updateRotation } from './physics.js';
 import { render, drawTrajectoryLines } from './render.js';
@@ -64,6 +65,34 @@ let container = {
     name: "Container"
 };
 
+let debugMode = false; // Add a debug mode flag
+let selectedPiece = null; // Track the selected piece for force monitoring
+
+// **Move the 'keydown' event listener outside the init function**
+window.addEventListener('keydown', (e) => {
+    if (e.key === 'd' || e.key === 'D') {
+        debugMode = !debugMode;
+        console.log(`Debug mode ${debugMode ? 'enabled' : 'disabled'}.`);
+        if (debugMode) {
+            // Select the current piece for monitoring
+            selectedPiece = currentPiece;
+            console.log(`Selected piece for force monitoring: ${selectedPiece ? selectedPiece.name : 'None'}`);
+        } else {
+            selectedPiece = null;
+        }
+    }
+});
+
+// Event listeners for pause menu buttons
+resumeButton.addEventListener('click', () => {
+    resumeGame();
+    console.log("Resumed game from pause menu.");
+});
+muteButton.addEventListener('click', () => toggleBackgroundMusic(backgroundMusic, muteButton));
+quitButton.addEventListener('click', () => {
+    console.log("Quitting game. Reloading page.");
+    location.reload();
+});
 
 // Initialize the deck
 function initDeck() {
@@ -110,6 +139,12 @@ function initDeck() {
 
 // Initialize the game
 async function init() {
+    // Cancel any existing animation frames to prevent multiple game loops
+    if (animationId) {
+        cancelAnimationFrame(animationId);
+        console.log("Previous game loop canceled.");
+    }
+
     canvas = document.getElementById('game-canvas');
     if (!canvas) {
         console.error("Game Canvas element not found!");
@@ -120,26 +155,25 @@ async function init() {
     canvas.height = CANVAS_HEIGHT;
     console.log(`Initialized canvas with width ${CANVAS_WIDTH} and height ${CANVAS_HEIGHT}.`);
 
+    // Reset all game data to original state
     pieces = [];
     purchasedBalls = [];
     initialDeck = [];
     lives = 3;
     score = 0;
     round = 1;
+    gold = 0;
     gameOver = false;
     targetScore = 10;
+    lastTime = performance.now();
+    animationId = null;
+    lastThrowTime = 0;
 
     updateTargetScore();
     updateScore();
     updateRound();
     updateGold();
     updateLivesDisplay();
-
-    canvas.addEventListener('mousemove', (e) => {
-        const pos = handleMouseMove(e, canvas);
-        aimX = pos.x;
-        aimY = pos.y;
-    });
 
     canvas.addEventListener('mouseup', (e) => {
         handleMouseUp(e, currentPiece, canvas, {
@@ -149,13 +183,16 @@ async function init() {
             MAX_VELOCITY
         }, pieces, spawnPiece, launchSound, lastThrowTime, (time) => lastThrowTime = time);
     });
+    
+    canvas.addEventListener('mousemove', (e) => {
+        const pos = handleMouseMove(e, canvas);
+        aimX = pos.x;
+        aimY = pos.y;
+    });
 
     // Initialize deck before image loading
     initDeck();
     spawnPiece();
-
-    // Add the container to the pieces array
-    pieces.push(container);
 
     // Preload all images and wait for them to load
     try {
@@ -177,17 +214,6 @@ async function init() {
         isPaused = false;
         pauseMenu.style.display = 'none';
         shop.classList.add('hidden');
-
-        // Event listeners for pause menu buttons
-        resumeButton.addEventListener('click', () => {
-            resumeGame();
-            console.log("Resumed game from pause menu.");
-        });
-        muteButton.addEventListener('click', () => toggleBackgroundMusic(backgroundMusic, muteButton));
-        quitButton.addEventListener('click', () => {
-            console.log("Quitting game. Reloading page.");
-            location.reload();
-        });
 
         // Event listener for closing the shop
         closeShopButton.addEventListener('click', () => {
@@ -223,6 +249,9 @@ async function init() {
             gameLoop(); // Resume the game loop
             startBackgroundMusic(); // Play background music
         });
+
+        // **Remove the 'keydown' event listener from here**
+        // It has been moved outside to prevent multiple attachments
 
     } catch (error) {
         console.error("Error preloading images:", error);
@@ -329,6 +358,8 @@ function gameLoop(currentTime = performance.now()) {
             aimX,
             aimY,
             drawTrajectoryLines,
+            debugMode, // Pass debugMode to render
+            selectedPiece // Pass the selected piece for force monitoring
         });
 
         // Optionally, log the current score and round every second
@@ -368,52 +399,54 @@ export function checkMerge(existingPiece, releasedPiece) {
     }
 }
 
-// Update game state
+// Updated update function to separate physics and collision handling
 function update(deltaTime) {
-    if (isNaN(deltaTime) || deltaTime <= 0) {
-        return;
-    }
+    if (isNaN(deltaTime) || deltaTime <= 0) return;
 
+    // First pass: Apply physics to all pieces
     for (let i = 0; i < pieces.length; i++) {
         const piece = pieces[i];
 
-        if (piece.merging || piece.isAtRest) continue;
+        if (piece.merging || piece.isAtRest || piece.isStatic) continue;
 
         applyGravity(piece, deltaTime);
         piece.x += piece.vx * deltaTime;
         piece.y += piece.vy * deltaTime;
-        applyFriction(piece);
         updateRotation(piece, deltaTime);
 
         // Floor collision
         if (piece.y + piece.attributes.radius > CANVAS_HEIGHT) {
             piece.y = CANVAS_HEIGHT - piece.attributes.radius;
-            piece.vy *= -BOUNCE_FACTOR; // Corrected from BOUT_CHANT_FACTOR
-    piece.vx *= FRICTION;
+            piece.vy *= -BOUNCE_FACTOR;
         }
 
         // Wall collisions
         if (piece.x - piece.attributes.radius < 0) {
             piece.x = piece.attributes.radius;
             piece.vx *= -BOUNCE_FACTOR;
-            piece.vy *= FRICTION;
         } else if (piece.x + piece.attributes.radius > CANVAS_WIDTH) {
             piece.x = CANVAS_WIDTH - piece.attributes.radius;
             piece.vx *= -BOUNCE_FACTOR;
-            piece.vy *= FRICTION;
-        }
-
-        // Check collisions with other pieces
-        for (let j = i + 1; j < pieces.length; j++) {
-            const otherPiece = pieces[j];
-            if (!otherPiece.isStatic && handleCollision(piece, otherPiece)) {
-                // After resolving collision, check for merges
-                checkMerge(piece, otherPiece);
-            }
         }
 
         // Collision with container walls
         handleContainerCollision(piece, container);
+    }
+
+    // Second pass: Handle collisions
+    for (let i = 0; i < pieces.length; i++) {
+        const piece1 = pieces[i];
+
+        if (!piece1 || piece1.merging || piece1.isAtRest || piece1.isStatic) continue;
+
+        for (let j = i + 1; j < pieces.length; j++) {
+            const piece2 = pieces[j];
+            if (!piece2 || piece2.merging || piece2.isAtRest || piece2.isStatic) continue;
+
+            if (handleCollision(piece1, piece2)) {
+                checkMerge(piece1, piece2);
+            }
+        }
     }
 
     // Remove merged pieces
@@ -436,62 +469,33 @@ function handleContainerCollision(piece, container) {
     const left = container.x;
     const right = container.x + container.width;
     const bottom = container.y;
-    const top = container.y - container.height;
+    const top = container.y + container.height;
 
-    // Check if the piece is inside the container
-    const isInside = piece.x > left && piece.x < right && piece.y > top;
+    const isInside = piece.x > left && piece.x < right && piece.y < top && piece.y > bottom;
 
     if (isInside) {
-        // Prevent exiting through the sides
         if (piece.x - piece.attributes.radius < left) {
             piece.x = left + piece.attributes.radius;
-            piece.vx = Math.abs(piece.vx) * BOUNCE_FACTOR;
+            piece.vx = Math.abs(piece.vx);
         }
         if (piece.x + piece.attributes.radius > right) {
             piece.x = right - piece.attributes.radius;
-            piece.vx = -Math.abs(piece.vx) * BOUNCE_FACTOR;
+            piece.vx = -Math.abs(piece.vx);
         }
-        // Prevent exiting through the bottom
-        if (piece.y + piece.attributes.radius > bottom) {
-            piece.y = bottom - piece.attributes.radius;
-            piece.vy = -Math.abs(piece.vy) * BOUNCE_FACTOR;
+        if (piece.y + piece.attributes.radius > top) {
+            piece.y = top - piece.attributes.radius;
+            piece.vy = -Math.abs(piece.vy);
         }
     } else {
-        // Prevent entering through the sides or bottom
-        if (piece.y + piece.attributes.radius > top && piece.y - piece.attributes.radius < bottom) {
-            // Left wall
-            if (piece.x + piece.attributes.radius > left && piece.x - piece.attributes.radius < left) {
-                piece.vx = -Math.abs(piece.vx) * BOUNCE_FACTOR;
+        if (piece.y + piece.attributes.radius > bottom) {
+            if (piece.x + piece.attributes.radius < left) {
+                piece.vx = -Math.abs(piece.vx);
             }
-            // Right wall
-            if (piece.x - piece.attributes.radius < right && piece.x + piece.attributes.radius > right) {
-                piece.vx = Math.abs(piece.vx) * BOUNCE_FACTOR;
+            if (piece.x - piece.attributes.radius > right) {
+                piece.vx = Math.abs(piece.vx);
             }
-            // Bottom wall
-            if (piece.y + piece.attributes.radius > bottom) {
-                piece.vy = -Math.abs(piece.vy) * BOUNCE_FACTOR;
-            }
-        }
-    }
-
-    // Allow entering only from the top
-    if (piece.y < top && piece.vy > 0) {
-        // No action needed; allow the piece to enter
-    } else if (piece.y - piece.attributes.radius > top) {
-        // Prevent entering from other directions
-        if (piece.x - piece.attributes.radius < left || piece.x + piece.attributes.radius > right || piece.y + piece.attributes.radius > bottom) {
-            // Handle collision as above
-            // Left wall
-            if (piece.x - piece.attributes.radius < left) {
-                piece.vx = Math.abs(piece.vx) * BOUNCE_FACTOR;
-            }
-            // Right wall
-            if (piece.x + piece.attributes.radius > right) {
-                piece.vx = -Math.abs(piece.vx) * BOUNCE_FACTOR;
-            }
-            // Bottom wall
-            if (piece.y + piece.attributes.radius > bottom) {
-                piece.vy = -Math.abs(piece.vy) * BOUNCE_FACTOR;
+            if (piece.y + piece.attributes.radius > top) {
+                piece.vy = -Math.abs(piece.vy);
             }
         }
     }
@@ -525,7 +529,14 @@ function resetGame() {
         updateLivesDisplay();
         gold += 50;
         updateGold();
-        openShop(shop, shopItemsContainer, ALL_PIECE_TYPES, 
+
+        // Get four random shop items
+        const shopItems = getRandomShopItems(ALL_PIECE_TYPES, SHOP_ITEMS);
+
+        openShop(
+            shop,
+            shopItemsContainer,
+            shopItems, // Pass the four random items instead of ALL_PIECE_TYPES
             (value) => { isPaused = value; },
             () => { cancelAnimationFrame(animationId); },
             imageCache
@@ -574,12 +585,12 @@ function nextRoundPhase1() {
         updateTargetScore();
 
         // Get four random shop items
-        const shopItems = getRandomShopItems(ALL_PIECE_TYPES, 4);
+        const shopItems = getRandomShopItems(ALL_PIECE_TYPES, SHOP_ITEMS);
 
         openShop(
             shop,
             shopItemsContainer,
-            shopItems, // Pass the four random items instead of ALL_PIECE_TYPES
+            shopItems, // Pass the three random items instead of ALL_PIECE_TYPES
             (value) => { isPaused = value; },
             () => { cancelAnimationFrame(animationId); },
             imageCache
@@ -599,8 +610,13 @@ function nextRoundPhase2() {
 // Event listener for purchasing items
 shopItemsContainer.addEventListener('click', (e) => {
     if (e.target.classList.contains('buy-button')) {
-        const itemIndex = e.target.getAttribute('data-index');
-        const item = ALL_PIECE_TYPES[itemIndex];
+        const itemName = e.target.getAttribute('data-name');
+        const item = ALL_PIECE_TYPES.find(piece => piece.name === itemName);
+
+        if (!item) {
+            console.error(`Item with name ${itemName} not found.`);
+            return;
+        }
 
         console.log(`Attempting to buy item: ${item.name}, Cost: ${item.attributes.cost}`);
 
@@ -608,7 +624,7 @@ shopItemsContainer.addEventListener('click', (e) => {
             gold -= item.attributes.cost;
             updateGold();
 
-            // **Add the purchased item to purchasedBalls to replenish the deck in the next round**
+            // Add the purchased item to purchasedBalls to replenish the deck in the next round
             purchasedBalls.push(item);
 
             // Disable the button
@@ -633,6 +649,20 @@ function startMergeAnimation(existingPiece, releasedPiece, newPieceType) {
     mergedPiece.x = (existingPiece.x + releasedPiece.x) / 2;
     mergedPiece.y = (existingPiece.y + releasedPiece.y) / 2;
 
+    // If the new piece has the "Eat" ability, consume a nearby Ladybug
+    if (mergedPiece.abilities && mergedPiece.abilities.includes("Eat")) {
+        const nearbyLadybug = pieces.find(piece => piece.name === "Ladybug" && isNear(mergedPiece, piece));
+        if (nearbyLadybug) {
+            // Remove the Ladybug from the game
+            pieces = pieces.filter(piece => piece !== nearbyLadybug);
+            // Add its value to the player's score
+            score += nearbyLadybug.attributes.value;
+            updateScore();
+            console.log(`${mergedPiece.name} consumed a Ladybug! Score increased by ${nearbyLadybug.attributes.value}.`);
+            playSound(mergeSound); // Play a sound effect for eating
+        }
+    }
+
     // Optionally, add visual effects or animations here
 
     // Add the merged piece after a short delay to allow animations
@@ -644,6 +674,54 @@ function startMergeAnimation(existingPiece, releasedPiece, newPieceType) {
         pieces = pieces.filter(piece => piece !== existingPiece && piece !== releasedPiece);
         console.log(`Removed merged pieces: ${existingPiece.name} & ${releasedPiece.name}`);
     }, 50); // Adjust the delay as needed for animations
+}
+
+// Helper function to determine if two pieces are near each other
+function isNear(piece1, piece2, distanceThreshold = 700) { // Adjust threshold as needed
+    const dx = piece1.x - piece2.x;
+    const dy = piece1.y - piece2.y;
+    const distance = Math.hypot(dx, dy);
+    return distance <= distanceThreshold;
+}
+
+// Add click event listener to handle Rabbit's Single Jump ability
+canvas.addEventListener('click', (e) => {
+    const rect = canvas.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+
+    // Find a Rabbit under the click
+    const clickedRabbit = pieces.find(piece => 
+        piece.name === "Rabbit" && 
+        Math.hypot(piece.x - mouseX, piece.y - mouseY) <= piece.attributes.radius
+    );
+
+    if (clickedRabbit && !clickedRabbit.hasJumped) {
+        // Trigger the Jump
+        triggerJump(clickedRabbit);
+    }
+});
+
+// Function to handle the jump mechanics
+function triggerJump(rabbit) {
+    // Define the jump velocity (adjust as needed for desired jump strength)
+    const jumpVelocityY = -600; // Negative value to move upwards
+
+    // Apply the jump velocity
+    rabbit.vy = jumpVelocityY;
+
+    // Optionally, apply a slight horizontal repositioning
+    const repositionOffset = 50; // Pixels to move horizontally
+    const direction = Math.random() < 0.5 ? -1 : 1; // Random left or right
+    rabbit.vx += direction * 200; // Adjust as needed
+
+    // Mark the ability as used
+    rabbit.hasJumped = true;
+    console.log(`${rabbit.name} performed a single jump!`);
+
+    // Play a jump sound (ensure you have a jump sound loaded)
+    const jumpSound = new Audio('/static/audio/jump.mp3');
+    playSound(jumpSound);
 }
 
 // Ensure that the game loop starts only after images are loaded and the Start button is clicked.

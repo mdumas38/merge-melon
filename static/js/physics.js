@@ -2,23 +2,44 @@
 import { GRAVITY, FRICTION, BOUNCE_FACTOR, ROTATION_FRICTION, SPEED_THRESHOLD, ANGULAR_VELOCITY_THRESHOLD, VELOCITY_THRESHOLD, CANVAS_WIDTH, CANVAS_HEIGHT, TORQUE_FACTOR } from './config.js';
 import { checkMerge } from './main.js';
 
-export function applyGravity(piece, deltaTime) {
-    if (typeof piece.vy !== 'number') {
-        console.error(`Invalid vy value for piece ${piece.name}:`, piece.vy);
-        piece.vy = 0; // Reset to prevent NaN
-    }
-    piece.vy += GRAVITY * deltaTime; // Ensure GRAVITY is defined as a number
+// Reset forces before applying new ones
+function resetForces(piece) {
+    piece.forces = [];
 }
 
+// Apply gravity and record the force
+export function applyGravity(piece, deltaTime) {
+    resetForces(piece);
+    
+    let gravityForce = GRAVITY * piece.attributes.mass;
+
+    // Check for "Float" ability
+    if (piece.abilities && piece.abilities.includes("Float")) {
+        gravityForce *= 0.5; // Reduce gravity by 50%
+        console.log(`${piece.name} is using "Float" ability. Reduced gravity force.`);
+    }
+
+    piece.forces.push({ type: 'Gravity', x: 0, y: gravityForce });
+    
+    piece.vy += GRAVITY * deltaTime * (piece.abilities && piece.abilities.includes("Float") ? 0.5 : 1);
+}
+
+// Apply friction and record the force
 export function applyFriction(piece) {
     if (typeof piece.vx !== 'number' || typeof piece.vy !== 'number') {
         console.error(`Invalid velocity values for piece ${piece.name}: vx=${piece.vx}, vy=${piece.vy}`);
-        piece.vx = piece.vy = 0; // Reset to prevent NaN
+        piece.vx = piece.vy = 0;
     }
+    
+    const frictionForceX = -FRICTION * piece.vx;
+    const frictionForceY = -FRICTION * piece.vy;
+    piece.forces.push({ type: 'Friction', x: frictionForceX, y: frictionForceY });
+    
     piece.vx *= FRICTION;
     piece.vy *= FRICTION;
 }
 
+// Handle collision and record the collision force
 export function handleCollision(piece1, piece2) {
     const dx = piece2.x - piece1.x;
     const dy = piece2.y - piece1.y;
@@ -26,7 +47,6 @@ export function handleCollision(piece1, piece2) {
     const overlap = piece1.attributes.radius + piece2.attributes.radius - distance;
 
     if (overlap > 0) {
-
         const mtvX = (dx / distance) * overlap;
         const mtvY = (dy / distance) * overlap;
 
@@ -53,6 +73,12 @@ export function handleCollision(piece1, piece2) {
         piece1.vy = (tangentY * dpTan1 + normalY * m1) * FRICTION;
         piece2.vx = (tangentX * dpTan2 + normalX * m2) * FRICTION;
         piece2.vy = (tangentY * dpTan2 + normalY * m2) * FRICTION;
+
+        // Record collision forces
+        const collisionForceX = (m1 - dpNorm1) * normalX;
+        const collisionForceY = (m1 - dpNorm1) * normalY;
+        piece1.forces.push({ type: 'Collision', x: collisionForceX, y: collisionForceY });
+        piece2.forces.push({ type: 'Collision', x: -collisionForceX, y: -collisionForceY });
 
         // Compute angular velocity changes based on tangential component
         piece1.angularVelocity += dpTan1 * TORQUE_FACTOR;

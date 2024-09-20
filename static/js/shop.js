@@ -28,7 +28,7 @@ export function openShop(shop, shopItemsContainer, SHOP_ITEMS, setIsPaused, canc
                 <div class="item-ability">${item.ability || 'No special ability'}</div>
                 <div class="item-details"></div>
                 <div class="item-cost">Cost: ${item.attributes.cost} Gold</div>
-                <button data-index="${index}" class="buy-button">Buy</button>
+                <button data-name="${item.name}" class="buy-button">Buy</button>
             `;
 
             // Insert the canvas into the item-details
