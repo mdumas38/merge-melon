@@ -1,3 +1,5 @@
+import { SHOP_SIZE, CHARACTER_FAMILIES } from './config.js';
+
 export function openShop(shop, shopItemsContainer, SHOP_ITEMS, setIsPaused, cancelAnimation, imageCache) {
     shopItemsContainer.innerHTML = ''; // Clear previous items
 
@@ -14,10 +16,10 @@ export function openShop(shop, shopItemsContainer, SHOP_ITEMS, setIsPaused, canc
 
             // Ensure images are loaded before drawing
             if (areImagesLoaded(item, imageCache)) {
-                drawCharacterImage(ballCtx, item, 30, 30, 25, imageCache);
+                drawCharacterImage(ballCtx, item, 30, 30, SHOP_SIZE, imageCache);
             } else {
                 // Optionally, display a loading indicator or placeholder
-                displayLoadingPlaceholder(ballCtx, 30, 30, 25, item.attributes.color);
+                displayLoadingPlaceholder(ballCtx, 30, 30, SHOP_SIZE, item.attributes.color);
             }
 
             // Display character details
@@ -78,13 +80,15 @@ function displayLoadingPlaceholder(ctx, x, y, size, color) {
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.fillText("...", x, y);
-}// Function to draw character images in the shop using preloaded images
-export function drawCharacterImage(ctx, character, x, y, size, imageCache) {
+}
+
+// Function to draw character images in the shop using preloaded images
+export function drawCharacterImage(ctx, character, x, y, SHOP_SIZE, imageCache) {
     try {
         const faceImg = imageCache[`${character.name}_face`];
         
         if (faceImg && faceImg.complete) {
-            ctx.drawImage(faceImg, x - size, y - size, size * 2, size * 2);
+            ctx.drawImage(faceImg, x - SHOP_SIZE, y - SHOP_SIZE, SHOP_SIZE * 2, SHOP_SIZE * 2);
         } else {
             throw new Error(`Face image for ${character.name} is not loaded.`);
         }
@@ -94,25 +98,46 @@ export function drawCharacterImage(ctx, character, x, y, size, imageCache) {
             character.features.forEach((feature) => {
                 const featureImg = imageCache[`${character.name}_${feature.type}`];
                 if (featureImg && featureImg.complete) {
-                    const posX = feature.position.x;
-                    const posY = feature.position.y;
+                    let posX = feature.position.x;
+                    let posY = feature.position.y;
                     
-                    // Use feature.width and feature.height if defined
-                    const featureWidth = feature.width || size;
-                    const featureHeight = feature.height || size;
+                    // Calculate feature width and height using factors
+                    const featureWidth = (feature.widthFactor ? feature.widthFactor * SHOP_SIZE * 2: SHOP_SIZE);
+                    const featureHeight = (feature.heightFactor ? feature.heightFactor * SHOP_SIZE * 2: SHOP_SIZE);
+
+                    // Maintain aspect ratio if width and height are not both defined
+                    let finalWidth = featureWidth;
+                    let finalHeight = featureHeight;
+                    if (!feature.width || !feature.height) {
+                        const aspectRatio = featureImg.naturalWidth / featureImg.naturalHeight;
+                        if (aspectRatio > 1) {
+                            finalHeight = featureWidth / aspectRatio;
+                        } else if (aspectRatio < 1) {
+                            finalWidth = featureHeight * aspectRatio;
+                        }
+                    }
+
+                    // Adjust position based on size (optional: add scaling if positions are too large)
+                    // For example, you can scale positions proportionally
+                    const BASE_SIZE = character.attributes.radius;
+                    const posScaleFactor = SHOP_SIZE / BASE_SIZE;
                     
+                    posX *= posScaleFactor;
+                    posY *= posScaleFactor;
+
                     ctx.drawImage(
                         featureImg,
-                        x + posX - featureWidth / 2, 
-                        y + posY - featureHeight / 2, 
-                        featureWidth, 
-                        featureHeight
+                        x + posX - finalWidth / 2, 
+                        y + posY - finalHeight / 2, 
+                        finalWidth, 
+                        finalHeight
                     );
                 } else {
                     console.warn(`Feature image for ${feature.type} of ${character.name} is not loaded.`);
                     // Draw fallback for missing feature
                     ctx.beginPath();
-                    ctx.arc(x + feature.position.x, y + feature.position.y, feature.size || size / 2, 0, Math.PI * 2);
+                    const fallbackSize = feature.size || SHOP_SIZE / 2;
+                    ctx.arc(x + feature.position.x, y + feature.position.y, fallbackSize, 0, Math.PI * 2);
                     ctx.fillStyle = "#FFFFFF"; // Default feature color
                     ctx.fill();
                 }
@@ -120,15 +145,15 @@ export function drawCharacterImage(ctx, character, x, y, size, imageCache) {
         }
     } catch (error) {
         console.error(error.message);
-        // Draw fallback for missing face image
+        // Fallback rendering
         ctx.beginPath();
-        ctx.arc(x, y, size, 0, Math.PI * 2);
+        ctx.arc(x, y, SHOP_SIZE, 0, Math.PI * 2);
         ctx.fillStyle = character.attributes.color;
         ctx.fill();
 
         // Draw value number
         ctx.fillStyle = "#000000";
-        ctx.font = `${size}px Arial`;
+        ctx.font = `${SHOP_SIZE}px Arial`;
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
         ctx.fillText(character.attributes.value, x, y);

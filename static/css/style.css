@@ -54,7 +54,7 @@ body {
 #score-container .score-label,
 #round-container .score-label,
 #target-score-container .target-score-label,
-#lives .score-label,
+#lives .lives-label,
 #gold-container .score-label {
     font-size: 16px; /* Slightly smaller for hierarchy */
     color: #FFFFFF; /* White color for labels */
@@ -130,39 +130,18 @@ body {
 
 /* Add styles for the bucket and lava */
 #bucket-container {
+    pointer-events: none; /* Allow clicks to pass through to the game canvas */
     position: absolute;
     bottom: 0;
     left: 50%;
     transform: translateX(-50%);
-    width: 200px; /* Top width */
-    height: 100px; /* Height of the bucket */
+    width: 500px; /* Top width */
+    height: 700px; /* Height of the bucket */
 }
 
 #bucket-canvas {
     width: 100%;
     height: 100%;
-    border-radius: 15px; /* Rounded corners for canvases */
-}
-
-#lava {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 20px; /* Matches LAVA_HEIGHT in JS */
-    background-color: #FF4500; /* Lava color */
-    z-index: 100; /* Ensure lava is visible above other elements */
-}
-
-#lives {
-    position: absolute;
-    top: 10px;
-    left: 10px;
-    font-size: 20px;
-    color: #FFFFFF;
-    background: rgba(0, 0, 0, 0.5);
-    padding: 5px 10px;
-    border-radius: 5px;
 }
 
 /* Boundary styling */
@@ -178,11 +157,11 @@ body {
 
 #shop {
     position: absolute;
-    top: 50%;
-    left: 50%;
+    top: 5%;
+    left: 5%;
     transform: translate(0%, 0%); /* Centers the shop both horizontally and vertically */
-    width: 80%; /* 80% of the game container's width */
-    height: 80%; /* 80% of the game container's height */
+    width: 90%; /* 80% of the game container's width */
+    height: 85%; /* 80% of the game container's height */
     max-width: 100%; /* Prevents the shop from exceeding the game container's width */
     max-height: 100%; /* Prevents the shop from exceeding the game container's height */
     background-color: rgba(0, 0, 0, 0.9);
@@ -210,11 +189,11 @@ body {
 
 #shop-items {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); /* Responsive grid layout */
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); /* Responsive grid layout */
     gap: 20px;
     justify-items: center;
     width: 90%; /* Takes full width of the shop */
-    padding: 0 10px; /* Adds horizontal padding for spacing */
+    padding: 0 20px; /* Adds horizontal padding for spacing */
 }
 
 .shop-item {
@@ -223,7 +202,7 @@ body {
     border-radius: 10px;
     padding: 10px;
     width: 100%; /* Makes the item responsive within the grid */
-    max-width: 150px; /* Prevents excessive width */
+    max-width: 90%; /* Prevents excessive width */
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -271,7 +250,7 @@ body {
 
 #close-shop-button {
     display: block;
-    margin: 5px auto 0;
+    margin: 5px auto 10px;
     padding: 15px 30px; /* Increased padding for more space around the text */
     background-color: #f44336;
     color: white;
@@ -291,21 +270,6 @@ body {
     margin-left: 20px;
 }
 
-/* Add styles for the bucket and lava */
-#bucket-container {
-    position: absolute;
-    bottom: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 200px; /* Top width */
-    height: 100px; /* Height of the bucket */
-}
-
-#bucket-canvas {
-    width: 100%;
-    height: 100%;
-}
-
 #lava {
     position: absolute;
     top: 0;
@@ -316,43 +280,10 @@ body {
     z-index: 100; /* Ensure lava is visible above other elements */
 }
 
-#lives {
-    position: absolute;
-    top: 10px;
-    left: 10px;
-    font-size: 20px;
-    color: #FFFFFF;
-    background: rgba(0, 0, 0, 0.5);
-    padding: 5px 10px;
-    border-radius: 5px;
-}
-
-/* Boundary styling */
-.boundary {
-    position: absolute;
-    background-color: #2E8B57; /* Same as side boundaries in JS */
-}
-
 .ball-container {
     width: 60px;
     height: 60px;
     margin-bottom: 0px;
-}
-
-#close-shop-button {
-    display: block;
-    margin: 5px auto 0;
-    padding: 15px 30px; /* Increased padding for more space around the text */
-    background-color: #f44336;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background-color 0.2s;
-}
-
-#close-shop-button:hover {
-    background-color: #d32f2f;
 }
 
 /* New Score Display Styles */
@@ -389,7 +320,7 @@ body {
 /* Updated Score and Target Score Display Styles */
 #score-target-display {
     position: absolute;
-    top: 15%; /* Moved higher up on the screen */
+    top: 5%; /* Moved higher up on the screen */
     left: 20px;
     transform: translateY(0); /* Removed translateY to prevent downward shift */
     text-align: left;
@@ -400,24 +331,10 @@ body {
     align-items: flex-start;
 }
 
-.score-label {
-    font-size: 18px; /* Slightly larger for prominence */
-    margin-bottom: 5px;
-    text-shadow: 1px 1px #000;
-}
-
-.score-number {
-    font-size: 48px; /* Very large for emphasis */
-    font-weight: bold;
-    animation: flash 1s infinite;
-    text-shadow: 2px 2px #000;
-}
-
 .target-score-label {
-    font-size: 14px; /* Smaller font size for subtlety */
-    margin-top: 10px; /* Adds space between score and target score */
-    font-family: Arial, sans-serif;
-    text-shadow: 1px 1px #000;
+    font-size: 20px;
+    margin-bottom: 5px;
+    text-shadow: 2px 2px #000;
 }
 
 .target-score-number {
@@ -488,5 +405,89 @@ button:hover {
     #gold-container .score-number {
         font-size: 24px; /* Adjusted font size for smaller screens */
     }
+}
+
+/* Start Menu Styles */
+#start-menu {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url('/static/images/game-background.png'); /* Same background as the game */
+    background-size: cover;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #FFD700; /* Gold color for text */
+    font-family: 'Press Start 2P', cursive; /* Retro game font */
+    z-index: 1001; /* Ensure it's above other elements */
+    animation: fadeIn 1s ease-in-out;
+}
+
+#start-menu .title {
+    font-size: 48px;
+    margin-bottom: 30px;
+    text-shadow: 2px 2px #000; /* Adds depth to the text */
+}
+
+#start-button {
+    padding: 15px 30px;
+    font-size: 20px;
+    cursor: pointer;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    transition: transform 0.2s, background-color 0.2s;
+    animation: pulse 2s infinite;
+}
+
+#start-button:hover {
+    background-color: #45a049;
+    transform: scale(1.1);
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from { opacity: .75; }
+    to { opacity: 1; }
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+/* Lives Display Styles */
+.lives-container {
+    display: flex;
+    align-items: center;
+    margin-top: 10px;
+    margin-bottom: 40px;
+    position: relative;
+    top: 5%;
+}
+
+.lives-label {
+    font-size: 18px;
+    color: #FFFFFF;
+    margin-right: 0px;
+    text-shadow: 1px 1px #000;
+    font-family: 'Press Start 2P', cursive;
+}
+
+#lives {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.heart {
+    width: 24px; /* Adjust size as needed */
+    height: 24px;
+    margin-right: 0px;
 }
 

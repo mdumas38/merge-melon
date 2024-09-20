@@ -1,7 +1,7 @@
 // main.js
 import { CANVAS_WIDTH, CANVAS_HEIGHT, ALL_PIECE_TYPES, THROW_COOLDOWN, SPAWN_Y, 
     POWER_SCALING_FACTOR, POWER_MULTIPLIER, MAX_VELOCITY, END_ROUND_COOLDOWN, 
-    BOUNCE_FACTOR, FRICTION, INITIAL_DECK_VALUES, CHARACTER_FAMILIES } from './config.js';
+    BOUNCE_FACTOR, FRICTION, INITIAL_DECK_VALUES, CHARACTER_FAMILIES, CONTAINER } from './config.js';
 import { createPiece, shuffleArray } from './piece.js';
 import { applyGravity, applyFriction, handleCollision, updateRotation } from './physics.js';
 import { render, drawTrajectoryLines } from './render.js';
@@ -9,6 +9,7 @@ import { handleMouseMove, handleMouseUp } from './input.js';
 import { openShop, closeShop } from './shop.js';
 import { playSound, toggleBackgroundMusic } from './audio.js';
 import { preloadImages } from './imageLoader.js';
+import { getRandomShopItems } from './helper.js';
 // Game variables
 let canvas, ctx, pieces, currentPiece, score, round, gameOver, targetScore;
 let lastTime, animationId;
@@ -16,8 +17,10 @@ let aimX, aimY;
 let particles = [];
 let lastThrowTime = 0;
 let deck = [];
+let initialDeck = [];
 let purchasedBalls = [];
 let gold = 0;
+let lives = 3; // Initialize with 3 lives
 
 const backgroundMusic = document.getElementById('background-music');
 const pauseMenu = document.getElementById('pause-menu');
@@ -40,34 +43,57 @@ const mergeSound = new Audio('/static/audio/merge.mp3');
 const launchSound = new Audio('/static/audio/drop.mp3');
 const gameOverSound = new Audio('/static/audio/gameover.mp3');
 
-// Initialize the deck
+// Add references to start menu elements
+const startMenu = document.getElementById('start-menu');
+const startButton = document.getElementById('start-button');
 
+let container = {
+    x: CONTAINER.x, // Top-left x-coordinate
+    y: CONTAINER.y, // Top-left y-coordinate
+    width: CONTAINER.width,
+    height: CONTAINER.height,
+    vx: 0,
+    vy: 0,
+    isStatic: true, // Indicates that this object doesn't move
+    attributes: {
+        radius: 0, // Not used for rectangular container
+        color: CONTAINER.color,
+        value: 0,
+        mass: Infinity, // Infinite mass to make it immovable
+    },
+    name: "Container"
+};
+
+
+// Initialize the deck
 function initDeck() {
     console.log("Initializing deck...");
     console.log(`Current deck length before initialization: ${deck.length}`);
     console.log(`Current purchasedBalls: [${purchasedBalls.map(item => item.name).join(', ')}]`);
 
-    // If the deck is empty, initialize it
-    if (deck.length === 0) {
-        // Add initial pieces based on INITIAL_DECK_VALUES
+    // If the initialDeck is empty, populate it with INITIAL_DECK_VALUES
+    if (initialDeck.length === 0) {
+        console.log("Populating initialDeck with INITIAL_DECK_VALUES...");
         for (let i = 0; i < INITIAL_DECK_VALUES.length; i++) {
-            const randomIndex = Math.floor(Math.random() * ALL_PIECE_TYPES.length);
-            const character = ALL_PIECE_TYPES[randomIndex];
-            deck.push(createPiece(character));
-            console.log(`Added ${character.name} to deck.`);
+            const character = ALL_PIECE_TYPES[INITIAL_DECK_VALUES[i]];
+            initialDeck.push(createPiece(character));
+            console.log(`Added ${character.name} to initialDeck.`);
         }
     }
 
-    // Add any newly purchased balls to the deck
-    deck = [...deck, ...purchasedBalls];
-    console.log(`Added ${purchasedBalls.length} purchased item(s) to deck.`);
-    purchasedBalls = []; // Clear the purchased balls array
+    // Refill the main deck with the initialDeck
+    deck = [...initialDeck];
+    console.log(`Refilled deck with initialDeck: [${deck.map(piece => piece.name).join(', ')}]`);
+
+    // Add any purchased balls to the deck
+    if (purchasedBalls.length > 0) {
+        deck = [...deck, ...purchasedBalls];
+        console.log(`Added ${purchasedBalls.length} purchased item(s) to deck.`);
+    }
 
     // Shuffle the deck
     shuffleArray(deck);
     console.log(`Shuffled deck: [${deck.map(piece => piece.name).join(', ')}]`);
-
-    console.log("Updated deck after initialization:", deck);
 
     // If the deck is still empty after initialization, add a default piece
     if (deck.length === 0) {
@@ -77,13 +103,13 @@ function initDeck() {
         console.log(`Added default piece: ${defaultPiece.name} to deck.`);
     }
 
-    console.log("Deck during initDeck:", deck);
-    console.log("Purchased Balls during initDeck:", purchasedBalls);
+    console.log("Deck after initDeck:", deck);
+    console.log("Purchased Balls after initDeck:", purchasedBalls);
     console.log("ALL_PIECE_TYPES:", ALL_PIECE_TYPES);
 }
 
 // Initialize the game
-function init() {
+async function init() {
     canvas = document.getElementById('game-canvas');
     if (!canvas) {
         console.error("Game Canvas element not found!");
@@ -95,35 +121,19 @@ function init() {
     console.log(`Initialized canvas with width ${CANVAS_WIDTH} and height ${CANVAS_HEIGHT}.`);
 
     pieces = [];
+    purchasedBalls = [];
+    initialDeck = [];
+    lives = 3;
     score = 0;
     round = 1;
     gameOver = false;
-    targetScore = 1;
+    targetScore = 10;
 
     updateTargetScore();
-    preloadImages(ALL_PIECE_TYPES, (cache1) => {
-        if (Object.keys(cache1).length === 0) {
-            console.error('No images were loaded for ALL_PIECE_TYPES. Check your image paths.');
-            return;
-        }
-        // Merge cache1 into imageCache
-        imageCache = { ...imageCache, ...cache1 };
-
-        // Preload images for characters
-        preloadImages(characters, (cache2) => {
-            if (Object.keys(cache2).length === 0) {
-                console.error('No images were loaded for characters. Check your image paths.');
-                return;
-            }
-            // Merge cache2 into imageCache
-            imageCache = { ...imageCache, ...cache2 };
-
-            // Start the game loop with the combined imageCache
-            startGameLoop(imageCache);
-        });
-    });
     updateScore();
     updateRound();
+    updateGold();
+    updateLivesDisplay();
 
     canvas.addEventListener('mousemove', (e) => {
         const pos = handleMouseMove(e, canvas);
@@ -140,57 +150,83 @@ function init() {
         }, pieces, spawnPiece, launchSound, lastThrowTime, (time) => lastThrowTime = time);
     });
 
+    // Initialize deck before image loading
     initDeck();
     spawnPiece();
 
-    lastTime = performance.now();
-    console.log("Starting game loop...");
-    gameLoop();
-    startBackgroundMusic();
+    // Add the container to the pieces array
+    pieces.push(container);
 
-    isPaused = false;
-    pauseMenu.style.display = 'none';
-    shop.classList.add('hidden');
+    // Preload all images and wait for them to load
+    try {
+        const cache1 = await preloadImages(ALL_PIECE_TYPES);
+        console.log("Loaded ALL_PIECE_TYPES images:", Object.keys(cache1));
 
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'p' || e.key === 'P') {
-            togglePause();
-            console.log(`Game ${isPaused ? 'paused' : 'resumed'}.`);
-        }
-    });
+        const cache2 = await preloadImages(CHARACTER_FAMILIES.animals.characters);
+        console.log("Loaded characters images:", Object.keys(cache2));
 
-    // Event listeners for pause menu buttons
-    resumeButton.addEventListener('click', () => {
-        resumeGame();
-        console.log("Resumed game from pause menu.");
-    });
-    muteButton.addEventListener('click', () => toggleBackgroundMusic(backgroundMusic, muteButton));
-    quitButton.addEventListener('click', () => {
-        console.log("Quitting game. Reloading page.");
-        location.reload();
-    });
+        // Merge caches
+        imageCache = { ...cache1, ...cache2 };
 
-    // Event listener for closing the shop
-    closeShopButton.addEventListener('click', () => {
-        closeShop(shop, 
-            (value) => { isPaused = value; },
-            initDeck,
-            spawnPiece,
-            () => {
-                lastTime = performance.now();
-                gameLoop();
-            }
-        );
-        console.log("Closed shop window.");
-        nextRoundPhase2();
-    });
+        // Start the game loop after images are loaded
+        gameLoop();
 
-    // Event listener for restarting the game
-    restartButton.addEventListener('click', () => {
-        console.log("Restarting game...");
-        gameOverDiv.classList.add('hidden');
-        init();
-    });
+        // Start background music
+        startBackgroundMusic();
+
+        isPaused = false;
+        pauseMenu.style.display = 'none';
+        shop.classList.add('hidden');
+
+        // Event listeners for pause menu buttons
+        resumeButton.addEventListener('click', () => {
+            resumeGame();
+            console.log("Resumed game from pause menu.");
+        });
+        muteButton.addEventListener('click', () => toggleBackgroundMusic(backgroundMusic, muteButton));
+        quitButton.addEventListener('click', () => {
+            console.log("Quitting game. Reloading page.");
+            location.reload();
+        });
+
+        // Event listener for closing the shop
+        closeShopButton.addEventListener('click', () => {
+            closeShop(shop, 
+                (value) => { isPaused = value; },
+                initDeck,
+                spawnPiece,
+                () => {
+                    lastTime = performance.now();
+                    gameLoop();
+                }
+            );
+            console.log("Closed shop window.");
+            nextRoundPhase2();
+        });
+
+        // Event listener for restarting the game
+        restartButton.addEventListener('click', () => {
+            console.log("Restarting game...");
+            gameOverDiv.classList.add('hidden');
+            init();
+        });
+
+        // Show the start menu and pause the game
+        isPaused = true;
+        startMenu.classList.remove('hidden');
+
+        // Add event listener to Start button
+        startButton.addEventListener('click', () => {
+            startMenu.classList.add('hidden'); // Hide the start menu
+            isPaused = false; // Unpause the game
+            lastTime = performance.now(); // Reset lastTime
+            gameLoop(); // Resume the game loop
+            startBackgroundMusic(); // Play background music
+        });
+
+    } catch (error) {
+        console.error("Error preloading images:", error);
+    }
 }
 
 // Start background music
@@ -256,6 +292,7 @@ function spawnPiece() {
     if (deck.length > 0) {
         const pieceFromDeck = deck.shift();
         console.log(`Spawning piece from deck: ${pieceFromDeck.name} (Value: ${pieceFromDeck.attributes.value})`);
+        console.log(`Deck length after releasing a ball: ${deck.length}`); // Added console log to show deck length
 
         currentPiece = {
             ...pieceFromDeck,
@@ -273,7 +310,7 @@ function spawnPiece() {
 }
 
 // Main game loop
-function gameLoop(currentTime) {
+function gameLoop(currentTime = performance.now()) {
     if (gameOver) {
         console.log("Game Over!");
         return;
@@ -305,7 +342,6 @@ function gameLoop(currentTime) {
 
 // Check for merges
 export function checkMerge(existingPiece, releasedPiece) {
-    console.log(`Attempting to merge: ${existingPiece.name} (Value: ${existingPiece.attributes.value}) & ${releasedPiece.name} (Value: ${releasedPiece.attributes.value})`);
 
     if (
         existingPiece.attributes.value === releasedPiece.attributes.value &&
@@ -326,9 +362,6 @@ export function checkMerge(existingPiece, releasedPiece) {
             console.warn(`No piece found with value ${existingPiece.attributes.value * 2} to merge into.`);
         }
     } else {
-        if (existingPiece.attributes.value !== releasedPiece.attributes.value) {
-            console.log(`Cannot merge: Different values (${existingPiece.attributes.value} vs ${releasedPiece.attributes.value}).`);
-        }
         if (existingPiece.merging || releasedPiece.merging) {
             console.log(`Cannot merge: One or both pieces are already merging.`);
         }
@@ -355,13 +388,8 @@ function update(deltaTime) {
         // Floor collision
         if (piece.y + piece.attributes.radius > CANVAS_HEIGHT) {
             piece.y = CANVAS_HEIGHT - piece.attributes.radius;
-            if (piece.ability === "Bounce Boost") {
-                piece.vy *= -BOUNCE_FACTOR * 1.5; // Corrected from BOUT_CHANT_FACTOR
-                displayAbilityEffect(piece);
-            } else {
-                piece.vy *= -BOUNCE_FACTOR; // Corrected from BOUT_CHANT_FACTOR
-            }
-            piece.vx *= FRICTION;
+            piece.vy *= -BOUNCE_FACTOR; // Corrected from BOUT_CHANT_FACTOR
+    piece.vx *= FRICTION;
         }
 
         // Wall collisions
@@ -378,11 +406,14 @@ function update(deltaTime) {
         // Check collisions with other pieces
         for (let j = i + 1; j < pieces.length; j++) {
             const otherPiece = pieces[j];
-            if (handleCollision(piece, otherPiece)) {
+            if (!otherPiece.isStatic && handleCollision(piece, otherPiece)) {
                 // After resolving collision, check for merges
                 checkMerge(piece, otherPiece);
             }
         }
+
+        // Collision with container walls
+        handleContainerCollision(piece, container);
     }
 
     // Remove merged pieces
@@ -400,13 +431,76 @@ function update(deltaTime) {
     }
 }
 
-// Display ability effect (e.g., glow around the piece)
-function displayAbilityEffect(piece) {
-    // Example implementation
-    // You can extend this with more visual effects
-    console.log(`Ability ${piece.ability} activated for ${piece.name}`);
-    // Add logic to visually show the ability effect
+// Updated collision handling function
+function handleContainerCollision(piece, container) {
+    const left = container.x;
+    const right = container.x + container.width;
+    const bottom = container.y;
+    const top = container.y - container.height;
+
+    // Check if the piece is inside the container
+    const isInside = piece.x > left && piece.x < right && piece.y > top;
+
+    if (isInside) {
+        // Prevent exiting through the sides
+        if (piece.x - piece.attributes.radius < left) {
+            piece.x = left + piece.attributes.radius;
+            piece.vx = Math.abs(piece.vx) * BOUNCE_FACTOR;
+        }
+        if (piece.x + piece.attributes.radius > right) {
+            piece.x = right - piece.attributes.radius;
+            piece.vx = -Math.abs(piece.vx) * BOUNCE_FACTOR;
+        }
+        // Prevent exiting through the bottom
+        if (piece.y + piece.attributes.radius > bottom) {
+            piece.y = bottom - piece.attributes.radius;
+            piece.vy = -Math.abs(piece.vy) * BOUNCE_FACTOR;
+        }
+    } else {
+        // Prevent entering through the sides or bottom
+        if (piece.y + piece.attributes.radius > top && piece.y - piece.attributes.radius < bottom) {
+            // Left wall
+            if (piece.x + piece.attributes.radius > left && piece.x - piece.attributes.radius < left) {
+                piece.vx = -Math.abs(piece.vx) * BOUNCE_FACTOR;
+            }
+            // Right wall
+            if (piece.x - piece.attributes.radius < right && piece.x + piece.attributes.radius > right) {
+                piece.vx = Math.abs(piece.vx) * BOUNCE_FACTOR;
+            }
+            // Bottom wall
+            if (piece.y + piece.attributes.radius > bottom) {
+                piece.vy = -Math.abs(piece.vy) * BOUNCE_FACTOR;
+            }
+        }
+    }
+
+    // Allow entering only from the top
+    if (piece.y < top && piece.vy > 0) {
+        // No action needed; allow the piece to enter
+    } else if (piece.y - piece.attributes.radius > top) {
+        // Prevent entering from other directions
+        if (piece.x - piece.attributes.radius < left || piece.x + piece.attributes.radius > right || piece.y + piece.attributes.radius > bottom) {
+            // Handle collision as above
+            // Left wall
+            if (piece.x - piece.attributes.radius < left) {
+                piece.vx = Math.abs(piece.vx) * BOUNCE_FACTOR;
+            }
+            // Right wall
+            if (piece.x + piece.attributes.radius > right) {
+                piece.vx = -Math.abs(piece.vx) * BOUNCE_FACTOR;
+            }
+            // Bottom wall
+            if (piece.y + piece.attributes.radius > bottom) {
+                piece.vy = -Math.abs(piece.vy) * BOUNCE_FACTOR;
+            }
+        }
+    }
+
+    // Apply friction after collision
+    piece.vx *= FRICTION;
+    piece.vy *= FRICTION;
 }
+
 
 // Update score and round displays
 function updateScore() {
@@ -425,14 +519,48 @@ function updateTargetScore() {
     document.getElementById('target-score').textContent = targetScore;
 }
 
+function resetGame() {
+    if (lives > 1) {
+        lives -= 1;
+        updateLivesDisplay();
+        gold += 50;
+        updateGold();
+        openShop(shop, shopItemsContainer, ALL_PIECE_TYPES, 
+            (value) => { isPaused = value; },
+            () => { cancelAnimationFrame(animationId); },
+            imageCache
+        );
+    } else {
+        endGame();
+    }
+}
+
+// Update the lives display
+function updateLivesDisplay() {
+    const livesContainer = document.getElementById('lives');
+    livesContainer.innerHTML = ''; // Clear existing hearts
+
+    for (let i = 0; i < lives; i++) {
+        const heartImg = document.createElement('img');
+        heartImg.src = '/static/images/heart/heart.png'; // Path to your heart image
+        heartImg.alt = 'Heart';
+        heartImg.classList.add('heart');
+        livesContainer.appendChild(heartImg);
+    }
+}
+
 // Handle game over
 function endGame() {
-    gameOver = true;
-    cancelAnimationFrame(animationId);
-    gameOverSound.play();
-    document.getElementById('final-score').textContent = score;
-    gameOverDiv.classList.remove('hidden');
-    backgroundMusic.pause();
+    if (lives > 1) {
+        resetGame(); // Function to reset the game state without ending it
+    } else {
+        gameOver = true;
+        cancelAnimationFrame(animationId);
+        gameOverSound.play();
+        document.getElementById('final-score').textContent = score;
+        gameOverDiv.classList.remove('hidden');
+        backgroundMusic.pause();
+    }
 }
 
 // Handle round progression
@@ -444,19 +572,27 @@ function nextRoundPhase1() {
         updateRound();
         targetScore = targetScore * 2;
         updateTargetScore();
-        openShop(shop, shopItemsContainer, ALL_PIECE_TYPES, 
+
+        // Get four random shop items
+        const shopItems = getRandomShopItems(ALL_PIECE_TYPES, 4);
+
+        openShop(
+            shop,
+            shopItemsContainer,
+            shopItems, // Pass the four random items instead of ALL_PIECE_TYPES
             (value) => { isPaused = value; },
             () => { cancelAnimationFrame(animationId); },
             imageCache
         );
     } else {
-        endGame();
+        resetGame();
     }
 }
 
 function nextRoundPhase2() {
     console.log("Initializing deck for the next round...");
     initDeck();
+    console.log("Deck at the start of the round:", deck); // Added console log to display the deck
     spawnPiece();
 }
 
@@ -471,9 +607,6 @@ shopItemsContainer.addEventListener('click', (e) => {
         if (gold >= item.attributes.cost) {
             gold -= item.attributes.cost;
             updateGold();
-
-            // Add the purchased character to ALL_PIECE_TYPES
-            ALL_PIECE_TYPES.push(item);
 
             // **Add the purchased item to purchasedBalls to replenish the deck in the next round**
             purchasedBalls.push(item);
@@ -513,20 +646,7 @@ function startMergeAnimation(existingPiece, releasedPiece, newPieceType) {
     }, 50); // Adjust the delay as needed for animations
 }
 
-function startGameLoop(imageCache) {
-    function gameLoop() {
-        // Your game loop logic
-        render(ctx, pieces, currentPiece, particles, imageCache, {
-            CANVAS_WIDTH,
-            CANVAS_HEIGHT,
-            aimX,
-            aimY,
-            drawTrajectoryLines,
-        });
-        requestAnimationFrame(gameLoop);
-    }
-    gameLoop();
-}
+// Ensure that the game loop starts only after images are loaded and the Start button is clicked.
 
 // Initial setup function
 init();

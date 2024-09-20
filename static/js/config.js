@@ -1,26 +1,31 @@
 // config.js
 
 // Canvas dimensions
-export const CANVAS_WIDTH = 600; // Adjust as needed
+export const CANVAS_WIDTH = 700; // Adjust as needed
 export const CANVAS_HEIGHT = 900; // Adjust as needed
 
 // Game physics constants
-export const GRAVITY = 980; // pixels per second squared
-export const FRICTION = 0.99;
-export const BOUNCE_FACTOR = 0.1;
-export const SPAWN_Y = 50;
+export const GRAVITY = 500; // pixels per second squared
+export const FRICTION = 0.995;
+export const BOUNCE_FACTOR = 0.3;
+export const SPAWN_Y = 100;
 export const MAX_VELOCITY = 2000;
 export const POWER_MULTIPLIER = 1;
-export const POWER_SCALING_FACTOR = 20;
+export const POWER_SCALING_FACTOR = 30;
 export const ROTATION_FRICTION = 0.99;
 export const SPEED_THRESHOLD = 1;
-export const ANGULAR_VELOCITY_THRESHOLD = 0.001;
+export const ANGULAR_VELOCITY_THRESHOLD = 0.01;
 export const VELOCITY_THRESHOLD = 0.1;
 export const END_ROUND_COOLDOWN = 2000;
 export const THROW_COOLDOWN = 500;
-export const TORQUE_FACTOR = 0.001; // Adjust for more realistic rotation
+export const TORQUE_FACTOR = 0.0008; // Adjust for more realistic rotation
+export const CONTAINER_WIDTH = 300;
+export const CONTAINER_HEIGHT = 600;
+export const SHOP_SIZE = 25; // Adjust based on how large you want characters in the shop
 
-export const INITIAL_DECK_VALUES = [1, 1, 1, 2, 2];
+
+
+export const INITIAL_DECK_VALUES = [0, 0, 1, 1, 2];
 
 // Character families and pieces
 export const CHARACTER_FAMILIES = {
@@ -49,8 +54,8 @@ export const CHARACTER_FAMILIES = {
                         type: "ears",
                         image: "/static/images/characters/mouse/mouse_ears.png",
                         position: { x: 0, y: -20 },
-                        widthFactor: 2,
-                        heightFactor: 1
+                        widthFactor: 1,
+                        heightFactor: 1 
                     }
                 ],
                 ability: "Bounce Boost",
@@ -59,7 +64,7 @@ export const CHARACTER_FAMILIES = {
                     color: "#808080",
                     value: 2,
                     mass: 2,
-                    angularVelocity: 2,
+                    angularVelocity: 1,
                     cost: 10
                 }
             },
@@ -73,7 +78,7 @@ export const CHARACTER_FAMILIES = {
                     color: "#ADD8E6",
                     value: 4,
                     mass: 3,
-                    angularVelocity: 3,
+                    angularVelocity: 1,
                     cost: 15
                 }
             },
@@ -84,16 +89,16 @@ export const CHARACTER_FAMILIES = {
                     {
                         type: "ears",
                         image: "/static/images/characters/rabbit/rabbit_ears.png",
-                        position: { x: 0, y: -38 }, // Positioned at the top of the Rabbit
-                        widthFactor: 2,  // 50% of the Rabbit's radius (15 pixels for radius 30)
-                        heightFactor: 1  // 30% of the Rabbit's radius (9 pixels for radius 30)
+                        position: { x: 0, y: -37 }, // Positioned at the top of the Rabbit
+                        widthFactor: 1,  // Adjusted for better scaling
+                        heightFactor: 1
                     },
                     {
                         type: "feet",
                         image: "/static/images/characters/rabbit/rabbit_feet.png",
-                        position: { x: 0, y: 30 }, // Positioned at the bottom of the Rabbit
-                        widthFactor: 1,  // 50% of the Rabbit's radius (15 pixels for radius 30)
-                        heightFactor: .5  // 30% of the Rabbit's radius (9 pixels for radius 30)
+                        position: { x: 0, y: 27 }, // Positioned at the bottom of the Rabbit
+                        widthFactor: .75,  
+                        heightFactor: 1
                     }
                 ],
                 ability: "Single Jump",
@@ -102,7 +107,7 @@ export const CHARACTER_FAMILIES = {
                     color: "#FFFFFF",
                     value: 8,
                     mass: 3,
-                    angularVelocity: 3,
+                    angularVelocity: 1,
                     cost: 20
                 }
             },
@@ -114,7 +119,7 @@ export const CHARACTER_FAMILIES = {
                         type: "ears",
                         image: "/static/images/characters/fox/fox_ears.png",
                         position: { x: 0, y: -32 },
-                        widthFactor: 2,  // Proportional to the fox's radius (35)
+                        widthFactor: 1,  // Proportional to the fox's radius (35)
                         heightFactor: 1
                     }
                 ],
@@ -124,7 +129,7 @@ export const CHARACTER_FAMILIES = {
                     color: "#FFA500",
                     value: 16,
                     mass: 4,
-                    angularVelocity: 4,
+                    angularVelocity: 1,
                     cost: 30
                 }
             },
@@ -149,9 +154,9 @@ export const CHARACTER_FAMILIES = {
                     {
                         type: "feet",
                         image: "/static/images/characters/eagle/eagle_feet.png",
-                        position: { x: -1, y: 46 }, // Positioned at the bottom
-                        widthFactor: 1,  // Proportional to the eagle's radius (45)
-                        heightFactor: .4
+                        position: { x: 0, y: 45 }, // Positioned at the bottom
+                        widthFactor: .5,  // Proportional to the eagle's radius (45)
+                        heightFactor: .5
                     },
                 ],
                 ability: "Swoop",
@@ -160,21 +165,29 @@ export const CHARACTER_FAMILIES = {
                     color: "#FFD700",
                     value: 64,
                     mass: 3,
-                    angularVelocity: 5,
+                    angularVelocity: 1,
                     cost: 50
                 }
             },
             {
                 name: "Wolf",
                 faceImage: "/static/images/characters/wolf/wolf_face.png",
-                features: [],
+                features: [
+                    {
+                        type: "ears",
+                        image: "/static/images/characters/wolf/wolf_ears.png",
+                        position: { x: 0, y: -45 },
+                        widthFactor: .75,  // Proportional to the wolf's radius (50)
+                        heightFactor: 1
+                    }
+                ],
                 ability: "Pack Strength",
                 attributes: {
                     radius: 50,
                     color: "#A9A9A9",
                     value: 128,
                     mass: 6,
-                    angularVelocity: 2,
+                    angularVelocity: 1,
                     cost: 60
                 }
             },
@@ -185,10 +198,10 @@ export const CHARACTER_FAMILIES = {
                     {
                         type: "mane",
                         image: "/static/images/characters/lion/lion_mane.png",
-                        position: { x: 0, y: 0 }, // Centered around the face
-                        widthFactor: 3,    // Increased width
-                        heightFactor: 3,   // Increased height
-                        zIndex: 10000      // Higher z-index to appear on top
+                        position: { x: 2, y: 0 }, // Centered around the face
+                        widthFactor: 1.4,    // Increased width
+                        heightFactor: 1.4,   // Increased height
+                        zIndex: 2      // Higher z-index to appear on top
                     },
                 ],
                 ability: "Roar",
@@ -197,7 +210,7 @@ export const CHARACTER_FAMILIES = {
                     color: "#DAA520",
                     value: 256,
                     mass: 7,
-                    angularVelocity: 3,
+                    angularVelocity: 1,
                     cost: 70
                 }
             }
@@ -210,3 +223,12 @@ export const ALL_PIECE_TYPES = [
     ...CHARACTER_FAMILIES.animals.characters,
     // Add other families' characters when available
 ];
+// Container configurations
+export const CONTAINER = {
+    x: CANVAS_WIDTH / 2 - CONTAINER_WIDTH / 2, // Centered horizontally with new width
+    y: CANVAS_HEIGHT - CONTAINER_HEIGHT,    // Positioned higher to accommodate new height
+    width: CONTAINER_WIDTH,                 // Updated width
+    height: CONTAINER_HEIGHT,                // Updated height
+    color: '#8B4513',           // Brown color for the container
+    lineWidth: 5                // Thickness of the container borders
+};

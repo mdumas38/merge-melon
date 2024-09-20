@@ -6,98 +6,7 @@
     <title>Merge Melon Game</title>
     <link rel="stylesheet" href="css/style.css">
     <!-- Inline Styles (Optional, consider moving to CSS files) -->
-    <style>
-        /* Your existing styles... */
-
-        #game-container {
-            position: relative;
-            border-radius: 15px;
-            overflow: hidden;
-            /* Add any existing styles for game-container */
-        }
-        #game-info {
-            display: flex;
-            justify-content: space-between;
-            padding: 10px;
-            /* Add any existing styles for game-info */
-        }
-        #pause-menu {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background-color: rgba(0, 0, 0, 0.8);
-            color: white;
-            padding: 20px;
-            border-radius: 10px;
-            text-align: center;
-            display: none;
-        }
-        #pause-menu button {
-            margin: 10px;
-            padding: 5px 10px;
-        }
-        #shop {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.8);
-            color: #fff;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-            border: 2px solid #fff;
-            border-radius: 10px;
-            overflow: auto;
-            margin: 0;
-            padding: 0;
-        }
-        #shop-h2 {
-            margin-bottom: 20px;
-            font-size: 24px;
-        }
-        #shop-items {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 20px;
-            margin-bottom: 20px;
-        }
-        .shop-item {
-            background-color: #333;
-            padding: 15px;
-            border-radius: 10px;
-            text-align: center;
-            width: 150px;
-        }
-        .shop-item button {
-            margin-top: 10px;
-            padding: 5px 10px;
-            cursor: pointer;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 5px;
-        }
-        .shop-item button:hover {
-            background-color: #45a049;
-        }
-        #close-shop-button {
-            padding: 10px 20px;
-            cursor: pointer;
-            background-color: #f44336;
-            color: white;
-            border: none;
-            border-radius: 5px;
-        }
-        #close-shop-button:hover {
-            background-color: #da190b;
-        }
-    </style>
+   
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 </head>
@@ -111,10 +20,19 @@
         
         <!-- Updated Score and Target Score Display -->
         <div id="score-target-display">
+            <!-- Lives Display -->
+            <div class="lives-container">
+                <span class="lives-label">Lives:</span>
+                <div id="lives">
+                    <!-- Heart images will be dynamically inserted here -->
+                </div>
+            </div>
             <div class="score-label">Score</div>
             <div class="score-number" id="score">0</div>
             <div class="target-score-label">Target Score:</div>
             <div class="target-score-number" id="target-score">0</div>
+            
+            
         </div>
         
         <div id="game-over" class="hidden">
@@ -136,7 +54,7 @@
             <button id="close-shop-button">Close Shop</button>
         </div>
         <audio id="background-music" loop>
-            <source src="audio/background-music.mp3" type="audio/mpeg">
+            <source src="audio/Carnival-Whirl-Intro.mp3" type="audio/mpeg">
             Your browser does not support the audio element.
         </audio>
         
@@ -148,6 +66,10 @@
         <!-- Use type="module" and point to main.js -->
         <script type="module" src="js/main.js"></script>
         
+        <div id="start-menu" class="hidden">
+            <h1 class="title">Slay the Melon</h1>
+            <button id="start-button">Start Game</button>
+        </div>
     </div>
 </body>
 </html>

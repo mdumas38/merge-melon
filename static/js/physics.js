@@ -3,10 +3,18 @@ import { GRAVITY, FRICTION, BOUNCE_FACTOR, ROTATION_FRICTION, SPEED_THRESHOLD, A
 import { checkMerge } from './main.js';
 
 export function applyGravity(piece, deltaTime) {
-    piece.vy += GRAVITY * deltaTime;
+    if (typeof piece.vy !== 'number') {
+        console.error(`Invalid vy value for piece ${piece.name}:`, piece.vy);
+        piece.vy = 0; // Reset to prevent NaN
+    }
+    piece.vy += GRAVITY * deltaTime; // Ensure GRAVITY is defined as a number
 }
 
 export function applyFriction(piece) {
+    if (typeof piece.vx !== 'number' || typeof piece.vy !== 'number') {
+        console.error(`Invalid velocity values for piece ${piece.name}: vx=${piece.vx}, vy=${piece.vy}`);
+        piece.vx = piece.vy = 0; // Reset to prevent NaN
+    }
     piece.vx *= FRICTION;
     piece.vy *= FRICTION;
 }
@@ -18,7 +26,6 @@ export function handleCollision(piece1, piece2) {
     const overlap = piece1.attributes.radius + piece2.attributes.radius - distance;
 
     if (overlap > 0) {
-        console.log(`Collision detected between ${piece1.name} and ${piece2.name}. Overlap: ${overlap.toFixed(2)}px`);
 
         const mtvX = (dx / distance) * overlap;
         const mtvY = (dy / distance) * overlap;

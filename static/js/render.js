@@ -1,12 +1,18 @@
 // render.js
-import { CANVAS_WIDTH, CANVAS_HEIGHT, GRAVITY, FRICTION, BOUNCE_FACTOR } from './config.js';
+import { CANVAS_WIDTH, CANVAS_HEIGHT, GRAVITY, FRICTION, BOUNCE_FACTOR, CONTAINER, POWER_SCALING_FACTOR, POWER_MULTIPLIER } from './config.js';
 // Existing drawPiece function with updates to handle features and added debug logs
 export function drawPiece(ctx, piece, imageCache) {
-    
     ctx.save();
     ctx.translate(piece.x, piece.y);
     ctx.scale(piece.animationScale || 1, piece.animationScale || 1);
     ctx.rotate(piece.rotation);
+
+    // Special handling for the container
+    if (piece.name === "Container") {
+        drawContainer(ctx, piece);
+        ctx.restore();
+        return;
+    }
 
     // Iterate over each feature and draw it
     if (piece.features && Array.isArray(piece.features)) {
@@ -16,13 +22,22 @@ export function drawPiece(ctx, piece, imageCache) {
 
             if (featureImg) {
                 if (featureImg.complete) {
-                    
                     const posX = feature.position.x;
                     const posY = feature.position.y;
 
-                    // Calculate feature size based on factors
-                    const drawWidth = feature.widthFactor ? piece.attributes.radius * feature.widthFactor : piece.attributes.radius * 2;
-                    const drawHeight = feature.heightFactor ? piece.attributes.radius * feature.heightFactor : piece.attributes.radius * 2;
+                    // Use feature.size if defined, else calculate based on radius and aspect ratio
+                    let drawWidth = feature.widthFactor * piece.attributes.radius * 2;
+                    let drawHeight = feature.heightFactor * piece.attributes.radius * 2;
+
+                    // Maintain aspect ratio if width and height are not both defined
+                    if (!feature.width || !feature.height) {
+                        const aspectRatio = featureImg.naturalWidth / featureImg.naturalHeight;
+                        if (aspectRatio > 1) {
+                            drawHeight = drawWidth / aspectRatio;
+                        } else if (aspectRatio < 1) {
+                            drawWidth = drawHeight * aspectRatio;
+                        }
+                    }
 
                     ctx.drawImage(
                         featureImg,
@@ -94,7 +109,7 @@ export function drawPiece(ctx, piece, imageCache) {
     ctx.restore();
 }
 
-export function drawTrajectoryLines(ctx, currentPiece, aimX, aimY, pieces, config) {
+export function drawTrajectoryLines(ctx, currentPiece, aimX, aimY, pieces) {
     if (currentPiece) {
         ctx.beginPath();
         ctx.moveTo(currentPiece.x, currentPiece.y);
@@ -105,7 +120,7 @@ export function drawTrajectoryLines(ctx, currentPiece, aimX, aimY, pieces, confi
         const dy = aimY - currentPiece.y;
         const distance = Math.hypot(dx, dy);
         const angle = Math.atan2(dy, dx);
-        const power = Math.min(distance / config.POWER_SCALING_FACTOR, 50) * 100 * config.POWER_MULTIPLIER;
+        const power = Math.min(distance / POWER_SCALING_FACTOR, 50) * 100 * POWER_MULTIPLIER;
 
         let simVx = Math.cos(angle) * power;
         let simVy = Math.sin(angle) * power;
@@ -119,18 +134,18 @@ export function drawTrajectoryLines(ctx, currentPiece, aimX, aimY, pieces, confi
             const prevX = simX;
             const prevY = simY;
 
-            simVy += config.GRAVITY * 0.016;
-            simVx *= config.FRICTION;
-            simVy *= config.FRICTION;
+            simVy += GRAVITY * 0.016;
+            simVx *= FRICTION;
+            simVy *= FRICTION;
             simX += simVx * 0.016;
             simY += simVy * 0.016;
 
-            if (simY + currentPiece.attributes.radius > config.CANVAS_HEIGHT ||
+            if (simY + currentPiece.attributes.radius > CANVAS_HEIGHT ||
                 simX - currentPiece.attributes.radius < 0 ||
-                simX + currentPiece.attributes.radius > config.CANVAS_WIDTH) {
+                simX + currentPiece.attributes.radius > CANVAS_WIDTH) {
                 collision = true;
-                simX = Math.max(currentPiece.attributes.radius, Math.min(config.CANVAS_WIDTH - currentPiece.attributes.radius, simX));
-                simY = Math.min(config.CANVAS_HEIGHT - currentPiece.attributes.radius, simY);
+                simX = Math.max(currentPiece.attributes.radius, Math.min(CANVAS_WIDTH - currentPiece.attributes.radius, simX));
+                simY = Math.min(CANVAS_HEIGHT - currentPiece.attributes.radius, simY);
             }
 
             for (const piece of pieces) {
@@ -155,6 +170,19 @@ export function drawTrajectoryLines(ctx, currentPiece, aimX, aimY, pieces, confi
     }
 }
 
+// New function to draw the container
+export function drawContainer(ctx, container) {
+    ctx.save();
+    ctx.strokeStyle = container.color;
+    ctx.lineWidth = container.lineWidth;
+    ctx.beginPath();
+    ctx.rect(container.x, container.y, container.width, container.height);
+    ctx.stroke();
+    ctx.restore();
+}
+
+// Ensure imageCache is received correctly.
+
 export function render(ctx, pieces, currentPiece, particles, imageCache, config) {
     ctx.clearRect(0, 0, config.CANVAS_WIDTH, config.CANVAS_HEIGHT);
 
@@ -164,7 +192,6 @@ export function render(ctx, pieces, currentPiece, particles, imageCache, config)
     // Draw pieces
     for (const piece of pieces) {
         drawPiece(ctx, piece, imageCache);
-        console.log(`Rendering ${piece.name} at (${piece.x.toFixed(2)}, ${piece.y.toFixed(2)})`);
     }
 
     // Draw current piece if it's not merging
@@ -185,6 +212,9 @@ export function render(ctx, pieces, currentPiece, particles, imageCache, config)
 
     // Draw boundaries
     drawBoundaries(ctx, config);
+
+    // Draw container
+    drawContainer(ctx, CONTAINER);
 }
 
 function drawSpawnIndicator(ctx, config) {
