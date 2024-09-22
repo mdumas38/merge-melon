@@ -47,9 +47,19 @@
             <button id="quit-button">Quit Game</button>
         </div>
         <div id="shop" class="hidden">
-            <h2>Shop</h2>
-            <div id="shop-items">
-                <!-- Shop items will be dynamically inserted here -->
+            <div id="shop-content">
+                <div id="deck-container">
+                    <h3>Balls in Deck</h3>
+                    <div id="deck-items" class="deck-grid"></div>
+                </div>
+                <div id="inventory-container">
+                    <h3>Balls in Inventory</h3>
+                    <div id="inventory-items" class="inventory-grid"></div>
+                </div>
+                <div id="shop-container">
+                    <h3>Balls to Buy in Shop</h3>
+                    <div id="shop-items"></div>
+                </div>
             </div>
             <button id="close-shop-button">Close Shop</button>
         </div>

@@ -11,6 +11,8 @@ import { openShop, closeShop } from './shop.js';
 import { playSound, toggleBackgroundMusic } from './audio.js';
 import { preloadImages } from './imageLoader.js';
 import { getRandomShopItems } from './helper.js';
+
+
 // Game variables
 let canvas, ctx, pieces, currentPiece, score, round, gameOver, targetScore;
 let lastTime, animationId;
@@ -67,6 +69,14 @@ let container = {
 
 let debugMode = false; // Add a debug mode flag
 let selectedPiece = null; // Track the selected piece for force monitoring
+
+// Track the number of balls remaining in the deck
+let deckCount = 0;
+
+// Update deck count whenever the deck is modified
+export function updateDeckCount() {
+    deckCount = deck.length;
+}
 
 // **Move the 'keydown' event listener outside the init function**
 window.addEventListener('keydown', (e) => {
@@ -135,6 +145,8 @@ function initDeck() {
     console.log("Deck after initDeck:", deck);
     console.log("Purchased Balls after initDeck:", purchasedBalls);
     console.log("ALL_PIECE_TYPES:", ALL_PIECE_TYPES);
+
+    updateDeckCount(); // Initialize deck count
 }
 
 // Initialize the game
@@ -154,6 +166,23 @@ async function init() {
     canvas.width = CANVAS_WIDTH;
     canvas.height = CANVAS_HEIGHT;
     console.log(`Initialized canvas with width ${CANVAS_WIDTH} and height ${CANVAS_HEIGHT}.`);
+
+    // **Move the click event listener inside the init function**
+    canvas.addEventListener('click', (e) => {
+        const mouseX = e.clientX - canvas.getBoundingClientRect().left;
+        const mouseY = e.clientY - canvas.getBoundingClientRect().top;
+
+        // Find a Rabbit under the click
+        const clickedRabbit = pieces.find(piece => 
+            piece.name === "Rabbit" && 
+            Math.hypot(piece.x - mouseX, piece.y - mouseY) <= piece.attributes.radius
+        );
+
+        if (clickedRabbit && !clickedRabbit.hasJumped) {
+            // Trigger the Jump
+            triggerJump(clickedRabbit);
+        }
+    });
 
     // Reset all game data to original state
     pieces = [];
@@ -332,6 +361,8 @@ function spawnPiece() {
             rotation: 0,
             isAtRest: false,
         };
+
+        updateDeckCount(); // Update deck count after spawning
     } else {
         currentPiece = null;
         console.log("No more pieces to spawn.");
@@ -359,7 +390,8 @@ function gameLoop(currentTime = performance.now()) {
             aimY,
             drawTrajectoryLines,
             debugMode, // Pass debugMode to render
-            selectedPiece // Pass the selected piece for force monitoring
+            selectedPiece, // Pass the selected piece for force monitoring
+            deckCount // Pass the deck count to render
         });
 
         // Optionally, log the current score and round every second
@@ -418,6 +450,11 @@ function update(deltaTime) {
         if (piece.y + piece.attributes.radius > CANVAS_HEIGHT) {
             piece.y = CANVAS_HEIGHT - piece.attributes.radius;
             piece.vy *= -BOUNCE_FACTOR;
+
+            // If the piece is Rabbit and has jumped, reset the hasJumped flag
+            if (piece.name === "Rabbit" && piece.hasJumped) {
+                piece.hasJumped = true; 
+            }
         }
 
         // Wall collisions
@@ -515,7 +552,7 @@ function updateRound() {
     document.getElementById('round').textContent = round;
 }
 
-function updateGold() {
+export function updateGold() {
     document.getElementById('gold').textContent = gold;
 }
 
@@ -527,16 +564,17 @@ function resetGame() {
     if (lives > 1) {
         lives -= 1;
         updateLivesDisplay();
-        gold += 50;
-        updateGold();
+        gold += Math.min(3 + round, 10);
+        updateGold();   
 
         // Get four random shop items
         const shopItems = getRandomShopItems(ALL_PIECE_TYPES, SHOP_ITEMS);
 
         openShop(
             shop,
-            shopItemsContainer,
-            shopItems, // Pass the four random items instead of ALL_PIECE_TYPES
+            deck,  // Pass the current deck
+            purchasedBalls,  // Pass the inventory (purchased balls)
+            shopItems,  // Pass the shop items
             (value) => { isPaused = value; },
             () => { cancelAnimationFrame(animationId); },
             imageCache
@@ -577,20 +615,20 @@ function endGame() {
 // Handle round progression
 function nextRoundPhase1() {
     if (score >= targetScore) {
-        gold += 50;
+        gold += Math.min(3 + round, 10);
         updateGold();
         round++;
         updateRound();
         targetScore = targetScore * 2;
         updateTargetScore();
 
-        // Get four random shop items
         const shopItems = getRandomShopItems(ALL_PIECE_TYPES, SHOP_ITEMS);
 
         openShop(
             shop,
-            shopItemsContainer,
-            shopItems, // Pass the three random items instead of ALL_PIECE_TYPES
+            deck,  // Pass the current deck
+            purchasedBalls,  // Pass the inventory (purchased balls)
+            shopItems,  // Pass the shop items
             (value) => { isPaused = value; },
             () => { cancelAnimationFrame(animationId); },
             imageCache
@@ -649,9 +687,127 @@ function startMergeAnimation(existingPiece, releasedPiece, newPieceType) {
     mergedPiece.x = (existingPiece.x + releasedPiece.x) / 2;
     mergedPiece.y = (existingPiece.y + releasedPiece.y) / 2;
 
-    // If the new piece has the "Eat" ability, consume a nearby Ladybug
-    if (mergedPiece.abilities && mergedPiece.abilities.includes("Eat")) {
-        const nearbyLadybug = pieces.find(piece => piece.name === "Ladybug" && isNear(mergedPiece, piece));
+    // Handle "Roar" ability for the Lion
+    if (mergedPiece.abilities && mergedPiece.abilities.includes("Roar") && mergedPiece.name === "Lion") {
+        const smallAnimals = ["Ladybug", "Mouse", "Bird", "Rabbit", "Fox"];
+        let removedAnimals = pieces.filter(piece => smallAnimals.includes(piece.name));
+        let totalValueRemoved = 0;
+
+        removedAnimals.forEach(animal => {
+            totalValueRemoved += animal.attributes.value;
+            console.log(`Lion's roar removed a ${animal.name}! Value: ${animal.attributes.value}.`);
+        });
+
+        // Remove small animals from the game
+        pieces = pieces.filter(piece => !smallAnimals.includes(piece.name));
+
+        // Add the total value to the player's score
+        score += totalValueRemoved;
+        updateScore();
+
+        console.log(`Lion's roar removed ${removedAnimals.length} small animals! Total score increase: ${totalValueRemoved}.`);
+        playSound(mergeSound); // Play a sound effect for roaring (you might want to create a specific roar sound)
+    }
+
+    // Handle "Eat Two Prey" ability for the Wolf
+    if (mergedPiece.abilities && mergedPiece.abilities.includes("Eat Two Prey") && mergedPiece.name === "Wolf") {
+        const nearbyPrey = pieces.filter(piece => 
+            (piece.name === "Rabbit" || piece.name === "Fox" || piece.name === "Mouse" || piece.name === "Bird") && 
+            isNear(mergedPiece, piece, 1000) // Adjust distanceThreshold as needed
+        );
+
+        const preyToEat = nearbyPrey.slice(0, 2); // Select up to two prey
+
+        let totalValueEaten = 0;
+        preyToEat.forEach(prey => {
+            // Remove the prey from the game
+            pieces = pieces.filter(piece => piece !== prey);
+            
+            // Add its value to the total
+            totalValueEaten += prey.attributes.value;
+            
+            console.log(`Wolf consumed a ${prey.name}! Value: ${prey.attributes.value}.`);
+            playSound(mergeSound); // Play a sound effect for eating
+        });
+
+        // Add the total value to the player's score
+        score += totalValueEaten;
+        updateScore();
+        
+        console.log(`Wolf consumed ${preyToEat.length} prey! Total score increase: ${totalValueEaten}.`);
+    }
+
+    // Handle "Eat One Prey" ability for the Eagle
+    if (mergedPiece.abilities && mergedPiece.abilities.includes("Eat One Prey") && mergedPiece.name === "Eagle") {
+        const nearbyPrey = pieces.filter(piece => 
+            (piece.name === "Mouse" || piece.name === "Rabbit" || piece.name === "Snake") && 
+            isNear(mergedPiece, piece, 1000) // Adjust distanceThreshold as needed
+        );
+
+        if (nearbyPrey.length > 0) {
+            // Randomly select one prey
+            const preyToEat = nearbyPrey[Math.floor(Math.random() * nearbyPrey.length)];
+            
+            // Remove the prey from the game
+            pieces = pieces.filter(piece => piece !== preyToEat);
+            
+            // Add its value to the player's score
+            score += preyToEat.attributes.value;
+            updateScore();
+            
+            console.log(`Eagle consumed a ${preyToEat.name}! Score increased by ${preyToEat.attributes.value}.`);
+            playSound(mergeSound); // Play a sound effect for eating
+        } else {
+            console.log(`Eagle couldn't find any prey nearby.`);
+        }
+    }
+
+    // Handle "Eat_2" ability for the Snake
+    if (mergedPiece.abilities && mergedPiece.abilities.includes("Eat_2") && mergedPiece.name === "Snake") {
+        const nearbyMice = pieces.filter(piece => 
+            piece.name === "Mouse" && 
+            isNear(mergedPiece, piece, 1000) // Adjust distanceThreshold as needed
+        );
+
+        const miceToEat = Math.min(nearbyMice.length, 2); // Eat up to 2 mice
+
+        for (let i = 0; i < miceToEat; i++) {
+            const mouse = nearbyMice[i];
+            // Remove the Mouse from the game
+            pieces = pieces.filter(piece => piece !== mouse);
+            // Add its value to the player's score
+            score += mouse.attributes.value;
+            console.log(`Snake consumed a Mouse! Score increased by ${mouse.attributes.value}.`);
+            playSound(mergeSound); // Play a sound effect for eating
+        }
+
+        updateScore();
+        console.log(`Snake consumed ${miceToEat} Mouse/Mice!`);
+    }
+
+    // Existing handling for "Eat" ability (e.g., for Fox)
+    if (mergedPiece.abilities && mergedPiece.abilities.includes("Eat") && mergedPiece.name === "Fox") {
+        const nearbyMouse = pieces.find(piece => 
+            piece.name === "Mouse" && 
+            isNear(mergedPiece, piece, 1000) // Adjust distanceThreshold as needed
+        );
+        if (nearbyMouse) {
+            // Remove the Mouse from the game
+            pieces = pieces.filter(piece => piece !== nearbyMouse);
+            // Add its value to the player's score
+            score += nearbyMouse.attributes.value;
+            updateScore();
+            console.log(`Fox consumed a Mouse! Score increased by ${nearbyMouse.attributes.value}.`);
+            playSound(mergeSound); // Play a sound effect for eating
+        }
+    }
+
+    // Existing handling for "Eat" ability (e.g., for Bird)
+    if (mergedPiece.abilities && mergedPiece.abilities.includes("Eat") && mergedPiece.name === "Bird") {
+        const nearbyLadybug = pieces.find(piece => 
+            piece.name === "Ladybug" && 
+            isNear(mergedPiece, piece, 1000) // Adjust distanceThreshold as needed
+        );
         if (nearbyLadybug) {
             // Remove the Ladybug from the game
             pieces = pieces.filter(piece => piece !== nearbyLadybug);
@@ -684,28 +840,10 @@ function isNear(piece1, piece2, distanceThreshold = 700) { // Adjust threshold a
     return distance <= distanceThreshold;
 }
 
-// Add click event listener to handle Rabbit's Single Jump ability
-canvas.addEventListener('click', (e) => {
-    const rect = canvas.getBoundingClientRect();
-    const mouseX = e.clientX - rect.left;
-    const mouseY = e.clientY - rect.top;
-
-    // Find a Rabbit under the click
-    const clickedRabbit = pieces.find(piece => 
-        piece.name === "Rabbit" && 
-        Math.hypot(piece.x - mouseX, piece.y - mouseY) <= piece.attributes.radius
-    );
-
-    if (clickedRabbit && !clickedRabbit.hasJumped) {
-        // Trigger the Jump
-        triggerJump(clickedRabbit);
-    }
-});
-
 // Function to handle the jump mechanics
 function triggerJump(rabbit) {
     // Define the jump velocity (adjust as needed for desired jump strength)
-    const jumpVelocityY = -600; // Negative value to move upwards
+    const jumpVelocityY = -1000; // Negative value to move upwards
 
     // Apply the jump velocity
     rabbit.vy = jumpVelocityY;

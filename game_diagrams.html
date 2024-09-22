@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Diagrams</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        .title {
+            font-size: 36px;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 40px;
+            color: #2c3e50;
+        }
+        .section-title {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 24px;
+            color: #34495e;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+        .flex {
+            display: flex;
+            flex-wrap: wrap;
+        }
+        .items-center {
+            align-items: center;
+        }
+        .justify-center {
+            justify-content: center;
+        }
+        .gap-4 {
+            gap: 24px;
+        }
+        .space-y-4 > * + * {
+            margin-top: 24px;
+        }
+        .card {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 16px;
+            width: 140px;
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        .card img {
+            width: 80px;
+            height: 80px;
+            object-fit: contain;
+            margin-bottom: 12px;
+        }
+        .card .name {
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        .card .value {
+            font-size: 14px;
+            color: #7f8c8d;
+        }
+        .arrow {
+            margin: 0 16px;
+            color: #7f8c8d;
+            font-size: 24px;
+        }
+        .evolution-chart {
+            background-color: #fff;
+            border-radius: 12px;
+            padding: 32px;
+            margin-bottom: 40px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .eating-relationships {
+            background-color: #fff;
+            border-radius: 12px;
+            padding: 32px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .relationship-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 24px;
+            padding: 16px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+        }
+        .prey-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-left: 24px;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    <script>
+        const animals = [
+            { name: 'Ladybug', value: 1 },
+            { name: 'Mouse', value: 2 },
+            { name: 'Bird', value: 4 },
+            { name: 'Rabbit', value: 8 },
+            { name: 'Fox', value: 16 },
+            { name: 'Snake', value: 32 },
+            { name: 'Eagle', value: 64 },
+            { name: 'Wolf', value: 128 },
+            { name: 'Lion', value: 256 },
+        ];
+
+        const eatingRelationships = [
+            { predator: 'Bird', prey: 'Ladybug' },
+            { predator: 'Fox', prey: 'Mouse' },
+            { predator: 'Snake', prey: 'Mouse' },
+            { predator: 'Eagle', prey: ['Mouse', 'Rabbit', 'Snake'] },
+            { predator: 'Wolf', prey: ['Rabbit', 'Fox', 'Mouse', 'Bird'] },
+            { predator: 'Lion', prey: ['Ladybug', 'Mouse', 'Bird', 'Rabbit', 'Fox'] },
+        ];
+
+        const AnimalCard = ({ animal }) => (
+            `<div class="card">
+                <img src="/static/images/characters/${animal.name.toLowerCase()}/${animal.name.toLowerCase()}.png" alt="${animal.name}" />
+                <span class="name">${animal.name}</span>
+                <span class="value">Value: ${animal.value}</span>
+            </div>`
+        );
+
+        const EvolutionChart = () => (
+            `<div class="evolution-chart">
+                <h2 class="section-title">Evolution Chart</h2>
+                <div class="flex flex-wrap items-center justify-center gap-4">
+                    ${animals.map((animal, index) => `
+                        ${AnimalCard({ animal })}
+                        ${index < animals.length - 1 ? '<span class="arrow">→</span>' : ''}
+                    `).join('')}
+                </div>
+            </div>`
+        );
+
+        const EatingRelationships = () => (
+            `<div class="eating-relationships">
+                <h2 class="section-title">Eating Relationships</h2>
+                <div class="space-y-4">
+                    ${eatingRelationships.map(({ predator, prey }) => `
+                        <div class="relationship-row">
+                            ${AnimalCard({ animal: { name: predator, value: '' } })}
+                            <span class="arrow">→</span>
+                            <div class="prey-container">
+                                ${Array.isArray(prey) ? prey.map(p => AnimalCard({ animal: { name: p, value: '' } })).join('') : AnimalCard({ animal: { name: prey, value: '' } })}
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>`
+        );
+
+        const GameDiagrams = () => (
+            `<div class="container">
+                <h1 class="title">Game Diagrams</h1>
+                ${EvolutionChart()}
+                ${EatingRelationships()}
+            </div>`
+        );
+
+        document.getElementById('root').innerHTML = GameDiagrams();
+    </script>
+</body>
+</html>

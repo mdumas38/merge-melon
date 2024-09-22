@@ -10,6 +10,7 @@ export function createPiece(character) {
         ...character, // Spread all character properties
         x: CANVAS_WIDTH / 2,
         y: SPAWN_Y + character.attributes.radius,
+        tier: character.attributes.tier,
         vx: 0,
         vy: 0,
         rotation: 0,

@@ -16,7 +16,6 @@ export function applyGravity(piece, deltaTime) {
     // Check for "Float" ability
     if (piece.abilities && piece.abilities.includes("Float")) {
         gravityForce *= 0.5; // Reduce gravity by 50%
-        console.log(`${piece.name} is using "Float" ability. Reduced gravity force.`);
     }
 
     piece.forces.push({ type: 'Gravity', x: 0, y: gravityForce });

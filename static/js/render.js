@@ -106,6 +106,17 @@ export function drawPiece(ctx, piece, imageCache) {
         ctx.fillText(piece.attributes.value, 0, 0);
     }
 
+    // Add a visual indicator for Rabbit's jump ability
+    if (piece.name === "Rabbit" && !piece.hasJumped) {
+        ctx.save();
+        ctx.globalAlpha = 0.3; // Set transparency for the tint
+        ctx.fillStyle = '#FFD700'; // Gold color for the tint
+        ctx.beginPath();
+        ctx.arc(0, 0, piece.attributes.radius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+    }
+
     ctx.restore();
 }
 
@@ -181,6 +192,35 @@ export function drawContainer(ctx, container) {
     ctx.restore();
 }
 
+// New function to draw the deck count
+function drawDeckCount(ctx, deckCount, currentPiece) {
+    if (!currentPiece) return; // No current piece to display count next to
+
+    const padding = 10; // Padding between the ball and the deck count text
+    const fontSize = 16;
+    ctx.font = `${fontSize}px Arial`;
+    ctx.fillStyle = '#FFFFFF'; // White color for visibility
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+
+    // Calculate position next to the current piece
+    const textX = currentPiece.x + currentPiece.attributes.radius + padding;
+    const textY = currentPiece.y;
+
+    const text = `Deck: ${deckCount}`;
+    const textMetrics = ctx.measureText(text);
+    const textWidth = textMetrics.width;
+    const textHeight = fontSize; // Approximate height
+
+    // Draw semi-transparent rectangle as background
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+    ctx.fillRect(textX - 5, textY - textHeight / 2 - 5, textWidth + 10, textHeight + 10);
+
+    // Draw the text above the rectangle
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillText(text, textX, textY);
+}
+
 // Ensure imageCache is received correctly.
 
 export function render(ctx, pieces, currentPiece, particles, imageCache, config) {
@@ -202,6 +242,9 @@ export function render(ctx, pieces, currentPiece, particles, imageCache, config)
     // Draw current piece if it's not merging
     if (currentPiece && !currentPiece.merging) {
         drawPiece(ctx, currentPiece, imageCache);
+
+        // Draw deck count next to the current piece
+        drawDeckCount(ctx, config.deckCount, currentPiece);
     }
 
     // Draw particles

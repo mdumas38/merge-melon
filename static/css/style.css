@@ -491,3 +491,121 @@ button:hover {
     margin-right: 0px;
 }
 
+#shop-content {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto 1fr;
+    gap: 20px;
+    padding: 20px;
+  }
+  
+  #deck-container, #inventory-container {
+    border: 1px solid #ccc;
+    padding: 10px;
+    overflow-y: auto;
+    max-height: 400px;
+  }
+  
+  #shop-container {
+    grid-column: 1 / -1;
+    border: 1px solid #ccc;
+    padding: 10px;
+  }
+  
+  .item-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+    gap: 10px;
+  }
+  
+  .item {
+    width: 60px;
+    height: 60px;
+    border: 1px solid #999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+  }
+
+  .deck-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: repeat(4, 1fr);
+    gap: 10px;
+    width: 100%;
+    max-width: 400px; /* Adjust as needed */
+    margin: 0 auto; /* Center the grid */
+}
+
+.deck-slot {
+    width: 100%;
+    padding-top: 100%; /* 1:1 Aspect Ratio */
+    position: relative;
+    border: 2px dashed #FFD700; /* Dashed border for placeholders */
+    border-radius: 10px;
+    background-color: rgba(255, 215, 0, 0.1); /* Light gold background */
+}
+
+.deck-slot img {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 80%;
+    height: 80%;
+    border-radius: 50%;
+}
+
+.deck-slot.placeholder::after {
+    content: '+';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 2em;
+    color: #FFD700;
+    pointer-events: none;
+}
+
+.inventory-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr); /* 5 columns */
+    grid-template-rows: repeat(4, 1fr); /* 4 rows */
+    gap: 10px;
+    width: 100%;
+    max-width: 600px; /* Adjust as needed */
+    margin: 0 auto; /* Center the grid */
+}
+
+/* Inventory Slot Styling */
+.inventory-slot {
+    width: 100%;
+    padding-top: 100%; /* 1:1 Aspect Ratio */
+    position: relative;
+    border: 2px solid #FFFFFF; /* Light white outline for placeholders */
+    border-radius: 10px;
+    background-color: transparent; /* No background tint */
+}
+
+.inventory-slot img {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 80%;
+    height: 80%;
+    border-radius: 50%;
+}
+
+.inventory-slot.placeholder::after {
+    content: '+';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 2em;
+    color: #FFFFFF;
+    pointer-events: none;
+}
+
