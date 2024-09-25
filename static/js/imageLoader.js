@@ -1,7 +1,8 @@
 // static/js/imageLoader.js
 
+import { gameState } from './gameState.js'; // Changed import
+
 export async function preloadImages(characters) {
-    const imageCache = {};
     const imagePromises = [];
 
     characters.forEach((char) => {
@@ -16,7 +17,7 @@ export async function preloadImages(characters) {
             const faceImg = new Image();
             faceImg.src = char.faceImage;
             faceImg.onload = () => {
-                imageCache[`${char.name}_face`] = faceImg;
+                gameState.imageCache[`${char.name}_face`] = faceImg; // Use gameState.imageCache
                 resolve();
             };
             faceImg.onerror = () => {
@@ -38,7 +39,7 @@ export async function preloadImages(characters) {
                     const featureImg = new Image();
                     featureImg.src = feature.image;
                     featureImg.onload = () => {
-                        imageCache[`${char.name}_${feature.type}`] = featureImg;
+                        gameState.imageCache[`${char.name}_${feature.type}`] = featureImg; // Use gameState.imageCache
                         resolve();
                     };
                     featureImg.onerror = () => {
@@ -53,5 +54,5 @@ export async function preloadImages(characters) {
         }
     });
 
-    return Promise.all(imagePromises).then(() => imageCache);
+    return Promise.all(imagePromises).then(() => gameState.imageCache);
 }

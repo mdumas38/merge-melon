@@ -1,12 +1,12 @@
 // config.js
 
 // Canvas dimensions
-export const CANVAS_WIDTH = 700; // Adjust as needed
+export const CANVAS_WIDTH = 900; // Adjust as needed
 export const CANVAS_HEIGHT = 900; // Adjust as needed
 
 // Game physics constants
-export const GRAVITY = 2000; // pixels per second squared
-export const FRICTION = 0.99;
+export const GRAVITY = 980; // pixels per second squared
+export const FRICTION = 0.98;
 export const BOUNCE_FACTOR = 0.3;
 export const SPAWN_Y = 100;
 export const MAX_VELOCITY = 2000;
@@ -21,10 +21,8 @@ export const THROW_COOLDOWN = 500;
 export const TORQUE_FACTOR = 0.0008; // Adjust for more realistic rotation
 export const CONTAINER_WIDTH = 300;
 export const CONTAINER_HEIGHT = 600;
-export const SHOP_SIZE = 25; // Adjust based on how large you want characters in the shop
+export const SHOP_SIZE = 40; // Adjust based on how large you want characters in the shop
 export const SHOP_ITEMS = 3;
-
-
 
 
 export const INITIAL_DECK_VALUES = [0, 0, 1, 1, 2];

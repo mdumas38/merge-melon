@@ -1,4 +1,5 @@
 import { THROW_COOLDOWN, POWER_SCALING_FACTOR, POWER_MULTIPLIER, MAX_VELOCITY } from './config.js';
+import { gameState } from './gameState.js';
 
 export function handleMouseMove(e, canvas) {
     const rect = canvas.getBoundingClientRect();
@@ -8,7 +9,7 @@ export function handleMouseMove(e, canvas) {
     };
 }
 
-export function handleMouseUp(e, currentPiece, canvas, config, pieces, spawnPiece, launchSound, lastThrowTime, setLastThrowTime) {
+export function handleMouseUp(e, currentPiece, canvas, pieces, spawnPiece, launchSound, lastThrowTime) {
     const currentTime = performance.now();
     if (currentTime - lastThrowTime >= THROW_COOLDOWN && currentPiece) {
         const rect = canvas.getBoundingClientRect();
@@ -30,8 +31,10 @@ export function handleMouseUp(e, currentPiece, canvas, config, pieces, spawnPiec
         currentPiece.vy = Math.max(Math.min(currentPiece.vy, MAX_VELOCITY), -MAX_VELOCITY);
 
         pieces.push(currentPiece);
-        launchSound.play();
+        launchSound.play(); // Use the passed launchSound
         spawnPiece();
-        setLastThrowTime(currentTime);
+
+        // **Update the lastThrowTime in gameState**
+        gameState.lastThrowTime = currentTime;
     }
 }

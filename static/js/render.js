@@ -1,5 +1,7 @@
 // render.js
 import { CANVAS_WIDTH, CANVAS_HEIGHT, GRAVITY, FRICTION, BOUNCE_FACTOR, CONTAINER, POWER_SCALING_FACTOR, POWER_MULTIPLIER } from './config.js';
+import { gameState } from './gameState.js';
+
 // Existing drawPiece function with updates to handle features and added debug logs
 export function drawPiece(ctx, piece, imageCache) {
     ctx.save();
@@ -18,7 +20,7 @@ export function drawPiece(ctx, piece, imageCache) {
     if (piece.features && Array.isArray(piece.features)) {
         piece.features.forEach((feature) => {
             const key = `${piece.name}_${feature.type}`;
-            const featureImg = imageCache[key];
+            const featureImg = gameState.imageCache[key];
 
             if (featureImg) {
                 if (featureImg.complete) {
@@ -64,7 +66,7 @@ export function drawPiece(ctx, piece, imageCache) {
 
     // Draw face image
     const faceKey = `${piece.name}_face`;
-    const faceImg = imageCache[faceKey];
+    const faceImg = gameState.imageCache[faceKey];
 
     if (faceImg) {
         if (faceImg.complete) {
@@ -229,8 +231,8 @@ export function render(ctx, pieces, currentPiece, particles, imageCache, config)
     // Draw trajectory lines
     drawTrajectoryLines(ctx, currentPiece, config.aimX, config.aimY, pieces, config);
 
-    // Draw pieces
-    for (const piece of pieces) {
+    // Draw pieces from Active Deck
+    for (const piece of pieces) { // **Use activeDeck instead of pieces or deck**
         drawPiece(ctx, piece, imageCache);
         
         // Visualize forces if debug mode is enabled and this is the selected piece

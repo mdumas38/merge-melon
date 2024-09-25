@@ -1,6 +1,9 @@
 // physics.js
-import { GRAVITY, FRICTION, BOUNCE_FACTOR, ROTATION_FRICTION, SPEED_THRESHOLD, ANGULAR_VELOCITY_THRESHOLD, VELOCITY_THRESHOLD, CANVAS_WIDTH, CANVAS_HEIGHT, TORQUE_FACTOR } from './config.js';
-import { checkMerge } from './main.js';
+import { GRAVITY, FRICTION, BOUNCE_FACTOR, ROTATION_FRICTION, SPEED_THRESHOLD, ANGULAR_VELOCITY_THRESHOLD, VELOCITY_THRESHOLD, CANVAS_WIDTH, CANVAS_HEIGHT, TORQUE_FACTOR, ALL_PIECE_TYPES } from './config.js';
+import { playSound, mergeSound } from './audio.js';
+import { updateScore } from './ui.js';
+import { gameState } from './gameState.js';
+import { startMergeAnimation } from './abilities.js';
 
 // Reset forces before applying new ones
 function resetForces(piece) {
@@ -126,6 +129,74 @@ export function updateRotation(piece, deltaTime) {
         piece.angularVelocity *= ROTATION_FRICTION;
         if (Math.abs(piece.angularVelocity) < ANGULAR_VELOCITY_THRESHOLD) {
             piece.angularVelocity = 0;
+        }
+    }
+}
+
+// Updated collision handling function
+export function handleContainerCollision(piece, container) {
+    const left = container.x;
+    const right = container.x + container.width;
+    const bottom = container.y;
+    const top = container.y + container.height;
+
+    const isInside = piece.x > left && piece.x < right && piece.y < top && piece.y > bottom;
+
+    if (isInside) {
+        if (piece.x - piece.attributes.radius < left) {
+            piece.x = left + piece.attributes.radius;
+            piece.vx = Math.abs(piece.vx);
+        }
+        if (piece.x + piece.attributes.radius > right) {
+            piece.x = right - piece.attributes.radius;
+            piece.vx = -Math.abs(piece.vx);
+        }
+        if (piece.y + piece.attributes.radius > top) {
+            piece.y = top - piece.attributes.radius;
+            piece.vy = -Math.abs(piece.vy);
+        }
+    } else {
+        if (piece.y + piece.attributes.radius > bottom) {
+            if (piece.x + piece.attributes.radius < left) {
+                piece.vx = -Math.abs(piece.vx);
+            }
+            if (piece.x - piece.attributes.radius > right) {
+                piece.vx = Math.abs(piece.vx);
+            }
+            if (piece.y + piece.attributes.radius > top) {
+                piece.vy = -Math.abs(piece.vy);
+            }
+        }
+    }
+
+    // Apply friction after collision
+    piece.vx *= FRICTION;
+    piece.vy *= FRICTION;
+}
+
+// Check for merges
+export function checkMerge(existingPiece, releasedPiece) {
+    const { score } = gameState;
+    if (
+        existingPiece.attributes.value === releasedPiece.attributes.value &&
+        !existingPiece.merging &&
+        !releasedPiece.merging
+    ) {
+        const newPieceType = ALL_PIECE_TYPES.find(
+            (pt) => pt.attributes.value === existingPiece.attributes.value * 2
+        );
+
+        if (newPieceType) {
+            startMergeAnimation(existingPiece, releasedPiece, newPieceType);
+            gameState.score += newPieceType.attributes.value;
+            updateScore();
+            playSound(mergeSound); // Use the imported mergeSound
+        } else {
+            console.warn(`No piece found with value ${existingPiece.attributes.value * 2} to merge into.`);
+        }
+    } else {
+        if (existingPiece.merging || releasedPiece.merging) {
+            console.log(`Cannot merge: One or both pieces are already merging.`);
         }
     }
 }
