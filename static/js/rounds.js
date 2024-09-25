@@ -75,17 +75,46 @@ export function initializeRound() {
 
 // **Monitor Active Deck and end round when empty**
 export function checkActiveDeck() {
-    if (getActiveDeck().length === 0) {
+    console.log("Checking active deck...", getActiveDeck().length);
+    if (getActiveDeck().length === 0 && performance.now() - gameState.lastThrowTime > 5000) {
         console.log("Active Deck is empty. Ending round...");
         endRound();
     }
 }
 
 export function endRound() {
-    // Implement the logic to end the round and return to the shop
     console.log("Round ended. Returning to shop...");
     snapshotStaticDeck(); // Snapshot the current static deck
+    showEndRoundNotification(); // New: Notify the player
     nextRoundPhase1();
+}
+
+function showEndRoundNotification() {
+    const notification = document.createElement('div');
+    notification.id = 'end-round-notification';
+    notification.innerText = "Round Completed!";
+    document.body.appendChild(notification);
+
+    // Style the notification
+    Object.assign(notification.style, {
+        position: 'absolute',
+        top: '50%',
+        left: '50%',
+        transform: 'translate(-50%, -50%)',
+        padding: '20px',
+        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+        color: '#FFD700',
+        borderRadius: '10px',
+        fontSize: '2em',
+        textAlign: 'center',
+        zIndex: '1000',
+        animation: 'fadeOut 3s forwards'
+    });
+
+    // Remove the notification after the animation
+    notification.addEventListener('animationend', () => {
+        notification.remove();
+    });
 }
 
 // Spawn a new piece

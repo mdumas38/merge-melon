@@ -76,17 +76,17 @@ export function attachEventListeners(callbacks) {
     // Removed redundant canvas event listeners as they should be handled in game.js
     // If needed, pass them as callbacks as well
 
-    if (gameState.closeShopButton) {
-        gameState.closeShopButton.addEventListener('click', () => {
-            closeShop(
-                (value) => { gameState.isPaused = value; },
-                initDeck,
-                spawnPiece
-            );
-        });
-    } else {
-        console.error("Close shop button not found in the DOM");
-    }
+    // if (gameState.closeShopButton) {
+    //     gameState.closeShopButton.addEventListener('click', () => {
+    //         closeShop(
+    //             (value) => { gameState.isPaused = value; },
+    //             initDeck,
+    //             spawnPiece
+    //         );
+    //     });
+    // } else {
+    //     console.error("Close shop button not found in the DOM");
+    // }
 
     // Attach keydown listener to the global window object for debug mode
     window.addEventListener('keydown', (e) => {

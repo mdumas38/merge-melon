@@ -209,7 +209,7 @@ function drawDeckCount(ctx, deckCount, currentPiece) {
     const textX = currentPiece.x + currentPiece.attributes.radius + padding;
     const textY = currentPiece.y;
 
-    const text = `Deck: ${deckCount}`;
+    const text = `Deck: ${gameState.activeDeck.length}`;
     const textMetrics = ctx.measureText(text);
     const textWidth = textMetrics.width;
     const textHeight = fontSize; // Approximate height

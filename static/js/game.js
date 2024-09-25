@@ -351,11 +351,11 @@ export function endGame() {
     if (lives > 1) {
         resetGame(); // Function to reset the game state without ending it
     } else {
-        gameOver = true;
+        gameState.gameOver = true;
         cancelAnimationFrame(animationId);
         gameOverSound.play();
-        document.getElementById('final-score').textContent = score;
-        gameOverDiv.classList.remove('hidden');
-        backgroundMusic.pause();
+        document.getElementById('final-score').textContent = gameState.score;
+        gameState.gameOverDiv.classList.remove('hidden');
+        gameState.backgroundMusic.pause();
     }
 }

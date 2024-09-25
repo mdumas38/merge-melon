@@ -1,7 +1,8 @@
 import { SHOP_SIZE, CHARACTER_FAMILIES, ALL_PIECE_TYPES } from './config.js';
 import { gameState } from './gameState.js'; // Updated import
-import { deductGold, updateDeckCount } from './ui.js';
+import { updateGold } from './ui.js';
 import { setActiveDeckToStaticDeck } from './rounds.js';
+import { createPiece } from './piece.js'; // Import createPiece
 
 export function openShop(shop, deckItems, inventoryItems, shopItems, setIsPaused, cancelAnimationFrame, imageCache) {
     gameState.isPaused = true;
@@ -109,27 +110,16 @@ function getPieceImageSrc(piece, imageCache) {
 }
 
 function populateItems(container, items, imageCache, type) {
+    container.innerHTML = ''; // Clear existing items
+
     items.forEach(item => {
         const itemElement = document.createElement('div');
         itemElement.classList.add('item');
 
-        const canvas = document.createElement('canvas');
-        canvas.width = SHOP_SIZE * 2;
-        canvas.height = SHOP_SIZE * 2;
-        const ctx = canvas.getContext('2d');
-
-        drawCharacterImage(ctx, item, SHOP_SIZE, SHOP_SIZE, SHOP_SIZE, imageCache);
-
-        itemElement.appendChild(canvas);
-
-        if (type === 'shop') {
-            const buyButton = document.createElement('button');
-            buyButton.textContent = `Buy`;
-            buyButton.classList.add('buy-button');
-            buyButton.setAttribute('data-name', item.name); // Ensure data-name is set for purchasing
-            buyButton.onclick = () => buyItem(item, imageCache);
-            itemElement.appendChild(buyButton);
-        }
+        // **Create draggable item with updated function**
+        const draggableItem = createDraggableItem(item, 'shop'); // {{ edit_shop_population }}
+        
+        itemElement.appendChild(draggableItem);
 
         container.appendChild(itemElement);
     });
@@ -371,6 +361,56 @@ function drop(e) {
         return; // No movement needed
     }
     
+    // **Handle items dropped from 'shop'**
+    if (source === 'shop') { // {{ edit_handle_shop_drop }}
+        const pieceName = draggableElement.dataset.pieceName;
+        console.log(`Dropping piece with name: ${pieceName}`);
+    
+        if (!pieceName) {
+            console.error("Data attribute 'data-pieceName' is missing.");
+            return;
+        }
+    
+        const piece = ALL_PIECE_TYPES.find(p => p.name === pieceName);
+        if (!piece) {
+            console.error(`Piece not found in ALL_PIECE_TYPES for name '${pieceName}'.`);
+            return;
+        }
+    
+        // Check if player has enough gold
+        if (gameState.gold < piece.attributes.cost) {
+            console.log(`Insufficient gold to purchase ${piece.name}.`);
+            alert('Insufficient gold to purchase this item.');
+            return;
+        }
+    
+        // Deduct gold
+        gameState.gold -= piece.attributes.cost;
+        updateGold();
+        console.log(`Purchased ${piece.name} for ${piece.attributes.cost} gold.`);
+    
+        // Create a new instance of the piece
+        const newPiece = createPiece(piece); // Ensure createPiece is correctly imported
+        if (!newPiece) {
+            console.error(`Failed to create a new piece for '${piece.name}'.`);
+            return;
+        }
+    
+        // Add piece to target (deck or inventory)
+        if (target === 'deck') {
+            gameState.staticDeck.push(newPiece);
+            populateDeck(document.getElementById('deck-items'), gameState.staticDeck, gameState.imageCache, 8);
+            console.log(`${piece.name} added to deck.`);
+        } else if (target === 'inventory') {
+            gameState.purchasedBalls.push(newPiece);
+            populateInventory(document.getElementById('inventory-items'), gameState.purchasedBalls, gameState.imageCache, 20);
+            console.log(`${piece.name} added to inventory.`);
+        }
+    
+        return;
+    }
+    
+    // **Handle items dropped from 'inventory' or 'deck'**
     // **Find the piece using the assigned ID**
     let piece;
     if (source === 'inventory') {
@@ -422,20 +462,20 @@ window.addEventListener('load', () => {
  * @param {string} source - The source container ('inventory' or 'deck')
  * @returns {HTMLElement} - The created draggable item element
  */
-function createDraggableItem(piece, source) { // {{ edit_1 }} Add 'source' parameter
-    const item = document.createElement('div'); // Using <div> for visual representation
+function createDraggableItem(piece, source) { // {{ edit_1 }} Updated createDraggableItem function
+    const item = document.createElement('div');
     item.classList.add('draggable-item');
     item.setAttribute('draggable', 'true');
     
-    // **Assign the unique ID to the piece object**
-    piece.id = `piece-${piece.name}-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`; // {{ edit_1 }}
-    item.id = piece.id; // Link the item's ID to the piece's ID
-    console.log(`Created draggable item with ID: ${item.id}`);
+    // Assign unique ID
+    piece.id = `piece-${piece.name}-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
+    item.id = piece.id;
     
-    // Set the source as a data attribute
-    item.dataset.source = source; // {{ edit_2 }} Set data-source
-
-    // Create the img element and append it to the div
+    // Set the source and pieceName as data attributes
+    item.dataset.source = source;
+    item.dataset.pieceName = piece.name; // {{ edit_1 }} Added pieceName data attribute
+    
+    // Create the img element
     const img = document.createElement('img');
     img.src = getPieceImageSrc(piece, gameState.imageCache);
     img.alt = piece.name;
