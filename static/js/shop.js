@@ -1,8 +1,20 @@
-import { SHOP_SIZE, CHARACTER_FAMILIES, ALL_PIECE_TYPES } from './config.js';
+import { ALL_PIECE_TYPES, SHOP_ITEMS } from './config.js';
 import { gameState } from './gameState.js'; // Updated import
 import { updateGold } from './ui.js';
-import { setActiveDeckToStaticDeck } from './rounds.js';
+import { initializeRound } from './rounds.js';
 import { createPiece } from './piece.js'; // Import createPiece
+import { getRandomShopItems } from './helper.js';
+
+// Add these functions at the top of the file
+function showSellOverlay() {
+    const overlay = document.getElementById('sell-overlay');
+    overlay.classList.add('active');
+}
+
+function hideSellOverlay() {
+    const overlay = document.getElementById('sell-overlay');
+    overlay.classList.remove('active');
+}
 
 export function openShop(shop, deckItems, inventoryItems, shopItems, setIsPaused, cancelAnimationFrame, imageCache) {
     gameState.isPaused = true;
@@ -30,6 +42,42 @@ export function openShop(shop, deckItems, inventoryItems, shopItems, setIsPaused
 
     // Re-enable drag and drop after populating
     enableDragAndDrop();
+
+    // Listen for sell events (optional if using alerts in events.js)
+    // Alternatively, handle feedback within events.js
+
+    const refreshButton = document.getElementById('refresh-shop-button');
+    refreshButton.addEventListener('click', refreshShop);
+
+    updateRefreshButtonState();
+}
+
+function refreshShop() {
+    if (gameState.gold >= 1) {
+        gameState.gold -= 1;
+        updateGold();
+
+        const newShopItems = getRandomShopItems(ALL_PIECE_TYPES, SHOP_ITEMS);
+        const shopContainer = document.getElementById('shop-items');
+        
+        // Clear existing shop items
+        shopContainer.innerHTML = '';
+        
+        // Populate with new items
+        populateItems(shopContainer, newShopItems, gameState.imageCache, 'shop');
+
+        console.log("Shop refreshed. New gold balance:", gameState.gold);
+
+        updateRefreshButtonState();
+    } else {
+        console.log("Not enough gold to refresh the shop.");
+        alert("Not enough gold to refresh the shop!");
+    }
+}
+
+export function updateRefreshButtonState() {
+    const refreshButton = document.getElementById('refresh-shop-button');
+    refreshButton.disabled = gameState.gold < 1;
 }
 
 /**
@@ -99,31 +147,33 @@ function populateInventory(container, items, imageCache, totalSlots) {
     }
 }
 
-function getPieceImageSrc(piece, imageCache) {
-    const faceKey = `${piece.name}_face`;
-    const faceImg = imageCache[faceKey];
-    if (faceImg && faceImg.src) {
-        return faceImg.src;
-    } else {
-        return '/static/images/default-placeholder.png'; // Path to a default placeholder image
-    }
-}
-
 function populateItems(container, items, imageCache, type) {
     container.innerHTML = ''; // Clear existing items
 
     items.forEach(item => {
         const itemElement = document.createElement('div');
-        itemElement.classList.add('item');
+        itemElement.classList.add('item-slot');
 
         // **Create draggable item with updated function**
-        const draggableItem = createDraggableItem(item, 'shop'); // {{ edit_shop_population }}
+        const draggableItem = createDraggableItem(item, type === 'shop' ? 'shop' : 'inventory'); // {{ existing edit }}
         
         itemElement.appendChild(draggableItem);
 
         container.appendChild(itemElement);
     });
 }
+
+
+function getPieceImageSrc(piece, imageCache) {
+    const bodyKey = `${piece.name}`;
+    const bodyImg = imageCache[bodyKey];
+    if (bodyImg && bodyImg.src) {
+        return bodyImg.src;
+    } else {
+        return '/static/images/default-placeholder.png'; // Path to a default placeholder image
+    }
+}
+
 
 function getGold() {
     return gold;
@@ -175,15 +225,12 @@ export function closeShop(setIsPaused, initDeck, spawnPiece) {
     setIsPaused(false);
     console.log("setIsPaused(false):", setIsPaused);
 
-    setActiveDeckToStaticDeck();
-
-    // Re-initialize the deck based on the rendered order
-    initDeck();
-    // Re-initialize the active deck for the next round
-    spawnPiece();
-    
+    initializeRound();
 
     console.log("Shop closed. Final deck state:", gameState.staticDeck);
+
+    const refreshButton = document.getElementById('refresh-shop-button');
+    refreshButton.removeEventListener('click', refreshShop);
 }
 
 // Helper function to check if all images for a character are loaded
@@ -265,8 +312,9 @@ export function drawCharacterImage(ctx, character, x, y, SHOP_SIZE, imageCache) 
 function enableDragAndDrop() {
     const deckContainer = document.getElementById('deck-items');
     const inventoryContainer = document.getElementById('inventory-items');
+    const shopContainer = document.getElementById('shop-items');
 
-    [deckContainer, inventoryContainer].forEach(container => {
+    [deckContainer, inventoryContainer, shopContainer].forEach(container => {
         container.addEventListener('dragover', dragOver);
         container.addEventListener('dragleave', dragLeave);
         container.addEventListener('drop', drop);
@@ -306,7 +354,7 @@ function dragEnd(e) {
 function dragOver(e) {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
-    const dropzone = e.target.closest('.deck-slot, .inventory-slot');
+    const dropzone = e.target.closest('.deck-slot, .inventory-slot, #deck-items, #inventory-items, #shop-container');
     if (dropzone) {
         dropzone.classList.add('drag-over');
     }
@@ -317,7 +365,7 @@ function dragOver(e) {
  * @param {DragEvent} e 
  */
 function dragLeave(e) {
-    const dropzone = e.target.closest('.deck-slot, .inventory-slot');
+    const dropzone = e.target.closest('.deck-slot, .inventory-slot, #deck-items, #inventory-items, #shop-container');
     if (dropzone) {
         dropzone.classList.remove('drag-over');
     }
@@ -330,7 +378,7 @@ function dragLeave(e) {
 function drop(e) {
     e.preventDefault();
     const id = e.dataTransfer.getData('text/plain');
-    const source = e.dataTransfer.getData('source'); // {{ edit_6 }}
+    const source = e.dataTransfer.getData('source');
     console.log("Drop event triggered with ID:", id, "Source:", source);
     
     if (!id) {
@@ -346,23 +394,72 @@ function drop(e) {
         return;
     }
     
-    // Determine the drop zone type
-    const dropzone = e.target.closest('.deck-slot, .inventory-slot');
+    const dropzone = e.target.closest('.deck-slot, .inventory-slot, #deck-items, #inventory-items, #shop-container');
     if (!dropzone) {
         console.error("Dropzone not recognized.");
         return;
     }
     
-    const target = dropzone.classList.contains('deck-slot') ? 'deck' : 'inventory'; // {{ edit_7 }}
+    const target = dropzone.id === 'deck-items' ? 'deck' :
+                   dropzone.id === 'inventory-items' ? 'inventory' :
+                   dropzone.id === 'shop-container' ? 'shop' :
+                   dropzone.classList.contains('deck-slot') ? 'deck' :
+                   dropzone.classList.contains('inventory-slot') ? 'inventory' :
+                   'shop';
+
     console.log(`Target dropzone: ${target}`);
     
     if (source === target) {
         console.log("Item dropped in the same container. No action taken.");
-        return; // No movement needed
+        return;
     }
     
-    // **Handle items dropped from 'shop'**
-    if (source === 'shop') { // {{ edit_handle_shop_drop }}
+    if (target === 'shop') {
+        // Show the sell overlay
+        showSellOverlay();
+        
+        // Set a timeout to hide the overlay after 2 seconds
+        setTimeout(() => {
+            hideSellOverlay();
+            
+            // Proceed with selling logic
+            let piece;
+            if (source === 'inventory') {
+                piece = gameState.purchasedBalls.find(p => p.id === id);
+                if (!piece) {
+                    console.warn("Piece not found in purchasedBalls.");
+                    return;
+                }
+                gameState.purchasedBalls = gameState.purchasedBalls.filter(p => p !== piece);
+                console.log(`Removed piece from inventory: ${piece.name}`);
+            } else if (source === 'deck') {
+                piece = gameState.staticDeck.find(p => p.id === id);
+                if (!piece) {
+                    console.warn("Piece not found in staticDeck.");
+                    return;
+                }
+                gameState.staticDeck = gameState.staticDeck.filter(p => p !== piece);
+                console.log(`Removed piece from deck: ${piece.name}`);
+            } else {
+                console.error("Invalid source for selling.");
+                return;
+            }
+
+            gameState.gold += 1;
+            updateGold();
+
+            if (source === 'inventory') {
+                populateInventory(document.getElementById('inventory-items'), gameState.purchasedBalls, gameState.imageCache, 20);
+            } else if (source === 'deck') {
+                populateDeck(document.getElementById('deck-items'), gameState.staticDeck, gameState.imageCache, 8);
+            }
+        }, 1000); // 2 seconds delay
+        
+        return;
+    }
+    
+    // Existing buy logic remains unchanged
+    if (source === 'shop') {
         const pieceName = draggableElement.dataset.pieceName;
         console.log(`Dropping piece with name: ${pieceName}`);
     
@@ -387,10 +484,9 @@ function drop(e) {
         // Deduct gold
         gameState.gold -= piece.attributes.cost;
         updateGold();
-        console.log(`Purchased ${piece.name} for ${piece.attributes.cost} gold.`);
-    
+
         // Create a new instance of the piece
-        const newPiece = createPiece(piece); // Ensure createPiece is correctly imported
+        const newPiece = createPiece(piece);
         if (!newPiece) {
             console.error(`Failed to create a new piece for '${piece.name}'.`);
             return;
@@ -451,6 +547,34 @@ function drop(e) {
     console.log("Updated Inventory and Deck after drop action.");
 }
 
+function showSellConfirmation(pieceName) { // {{ new function }}
+    const confirmation = document.createElement('div');
+    confirmation.id = 'sell-confirmation';
+    confirmation.innerText = `Sold ${pieceName} for 1 gold!`;
+    document.body.appendChild(confirmation);
+
+    // Style the confirmation
+    Object.assign(confirmation.style, {
+        position: 'absolute',
+        top: '20%',
+        left: '50%',
+        transform: 'translate(-50%, -50%)',
+        padding: '10px 20px',
+        backgroundColor: 'rgba(0, 128, 0, 0.8)',
+        color: '#FFD700',
+        borderRadius: '5px',
+        fontSize: '1.2em',
+        textAlign: 'center',
+        zIndex: '1001',
+        animation: 'fadeInOut 2s forwards'
+    });
+
+    // Remove the confirmation after animation
+    confirmation.addEventListener('animationend', () => {
+        confirmation.remove();
+    });
+}
+
 // Initialize drag and drop functionality on window load
 window.addEventListener('load', () => {
     enableDragAndDrop();
@@ -459,10 +583,10 @@ window.addEventListener('load', () => {
 /**
  * Function to create a draggable item with a unique ID and source
  * @param {Object} piece - The game piece object containing necessary attributes
- * @param {string} source - The source container ('inventory' or 'deck')
+ * @param {string} source - The source container ('inventory', 'deck', or 'shop')
  * @returns {HTMLElement} - The created draggable item element
  */
-function createDraggableItem(piece, source) { // {{ edit_1 }} Updated createDraggableItem function
+function createDraggableItem(piece, source) { // {{ existing edit }}
     const item = document.createElement('div');
     item.classList.add('draggable-item');
     item.setAttribute('draggable', 'true');
@@ -473,7 +597,7 @@ function createDraggableItem(piece, source) { // {{ edit_1 }} Updated createDrag
     
     // Set the source and pieceName as data attributes
     item.dataset.source = source;
-    item.dataset.pieceName = piece.name; // {{ edit_1 }} Added pieceName data attribute
+    item.dataset.pieceName = piece.name; // {{ existing edit }}
     
     // Create the img element
     const img = document.createElement('img');
@@ -532,3 +656,47 @@ export function renderDeck(staticDeck, imageCache) {
 
     console.log("Deck rendered in the shop.");
 }
+
+// Add a new toggleFreezeShop function
+function toggleFreezeShop() {
+    const shopItemsContainer = document.getElementById('shop-items');
+    const freezeButton = document.getElementById('freeze-shop-button');
+
+    if (gameState.isShopFrozen) {
+        // Unfreeze the shop
+        gameState.isShopFrozen = false;
+        shopItemsContainer.classList.remove('shop-frozen'); // Remove blue tint
+        enableShopInteractions();
+        freezeButton.textContent = 'Freeze Shop';
+        console.log("Shop has been unfrozen.");
+    } else {
+        // Freeze the shop
+        gameState.isShopFrozen = true;
+        shopItemsContainer.classList.add('shop-frozen'); // Apply blue tint
+        disableShopInteractions();
+        freezeButton.textContent = 'Unfreeze Shop';
+        console.log("Shop has been frozen until the next round.");
+    }
+}
+
+// Add new event listener for toggleFreezeShop
+document.getElementById('freeze-shop-button').addEventListener('click', toggleFreezeShop);
+
+// Function to disable shop interactions when frozen
+export function disableShopInteractions() {
+    const shopItems = document.querySelectorAll('#shop-items .draggable-item, #shop-items .buy-button');
+    shopItems.forEach(item => {
+        item.style.pointerEvents = 'none';
+    });
+}
+
+// Function to enable shop interactions when unfrozen
+export function enableShopInteractions() {
+    const shopItems = document.querySelectorAll('#shop-items .draggable-item, #shop-items .buy-button');
+    shopItems.forEach(item => {
+        item.style.pointerEvents = 'auto';
+    });
+}
+
+// Add event listener for the Freeze Shop button
+document.getElementById('freeze-shop-button').addEventListener('click', toggleFreezeShop);

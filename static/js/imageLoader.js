@@ -12,6 +12,21 @@ export async function preloadImages(characters) {
             return;
         }
 
+        // Load body image
+        const bodyPromise = new Promise((resolve, reject) => {
+            const bodyImg = new Image();
+            bodyImg.src = char.bodyImage;
+            bodyImg.onload = () => {
+                gameState.imageCache[char.name] = bodyImg; // Use char.name as key
+                resolve();
+            };
+            bodyImg.onerror = () => {
+                console.error(`Failed to load body image: ${char.bodyImage}`);
+                resolve(); // Resolve even on error to continue loading other images
+            };
+        });
+        imagePromises.push(bodyPromise);
+
         // Load face image
         const facePromise = new Promise((resolve, reject) => {
             const faceImg = new Image();

@@ -1,18 +1,19 @@
 import { getRandomShopItems } from './helper.js';
 import { createPiece, shuffleArray } from './piece.js';
-import { ALL_PIECE_TYPES, INITIAL_DECK_VALUES, SHOP_ITEMS } from './config.js';
+import { ALL_PIECE_TYPES, INITIAL_DECK_VALUES, SHOP_ITEMS, CANVAS_WIDTH, SPAWN_Y } from './config.js';
 import { gameState, getActiveDeck, updateActiveDeck } from './gameState.js'; // Updated import
 import { updateDeckCount, updateGold, updateRound, updateTargetScore } from './ui.js';
 import { openShop, renderDeck, closeShop } from './shop.js'; // Add this import
 
 // Initialize the deck
 export function initDeck() {
-    console.log("Initializing deck...");
-    
+    // This function initializes the staticDeck
     if (gameState.staticDeck.length === 0) {
+    // Fill the staticDeck with starting deck cards
         for (let i = 0; i < INITIAL_DECK_VALUES.length; i++) {
-            const character = ALL_PIECE_TYPES[INITIAL_DECK_VALUES[i]];
-            gameState.staticDeck.push(createPiece(character));
+            const startingPieceType = ALL_PIECE_TYPES[INITIAL_DECK_VALUES[i]];
+            const newPiece = createPiece(startingPieceType);
+            gameState.staticDeck.push(newPiece);
         }
     } else {
         console.log("Deck already initialized. Clearing existing deck...");
@@ -47,35 +48,53 @@ export function initDeck() {
         }
 
     console.log("Deck after initialization:", gameState.staticDeck);
+
+    createActiveDeck();
+    }
 }
+
+
+function createActiveDeck() {
+    gameState.activeDeck = [];
+    
+    gameState.staticDeck.forEach(piece => {
+        // Add each piece from staticDeck to activeDeck three times
+        for (let i = 0; i < 3; i++) {
+            const newPiece = createPiece(piece);
+            gameState.activeDeck.push(newPiece);
+        }
+    });
+
+    console.log("Active deck created:", gameState.activeDeck);
 }
 
 // **Snapshot the Static Deck**
 export function snapshotStaticDeck() {
-    gameState.staticDeckSnapshot.length = 0; // Updated reference
-    gameState.staticDeckSnapshot.push(...JSON.parse(JSON.stringify(gameState.staticDeck))); // Updated reference
-    console.log("Snapshot of Static Deck taken:", gameState.staticDeckSnapshot);
+    gameState.staticDeckSnapshot = [...gameState.staticDeck];
+    console.log("Static deck snapshot taken:", gameState.staticDeckSnapshot);
+    
+    // After taking the snapshot, recreate the activeDeck
+    createActiveDeck();
 }
 
 // **Initialize Active Deck at the start of the round**
 export function initializeRound() {
     console.log("Initializing round...");
-    // Clone the static deck to create the active deck for this round
-    const newActiveDeck = [...gameState.staticDeck]; // Updated reference
+    createActiveDeck();
     console.log(`Static deck size before cloning: ${gameState.staticDeck.length}`); // Updated reference
-    shuffleArray(newActiveDeck);
+    shuffleArray(gameState.activeDeck);
     console.log("New active deck shuffled");
-    updateActiveDeck(newActiveDeck);
-    console.log(`Active deck updated. New size: ${getActiveDeck().length}`);
+    console.log(`Active deck updated. New size: ${gameState.activeDeck.length}`);
+    updateDeckCount();
     console.log("Deck count updated");
-    console.log("New piece spawned");
+
+    spawnPiece();
     console.log(`Round initialized. Active deck count: ${getActiveDeck().length}`);
     console.log("Round initialization complete");
 }
 
 // **Monitor Active Deck and end round when empty**
 export function checkActiveDeck() {
-    console.log("Checking active deck...", getActiveDeck().length);
     if (getActiveDeck().length === 0 && performance.now() - gameState.lastThrowTime > 5000) {
         console.log("Active Deck is empty. Ending round...");
         endRound();
@@ -119,17 +138,14 @@ function showEndRoundNotification() {
 
 // Spawn a new piece
 export function spawnPiece() {
-    const activeDeck = getActiveDeck();
-    if (activeDeck.length > 0) {
-        gameState.currentPiece = activeDeck.pop();
-        updateActiveDeck(activeDeck); // Update the active deck after popping
-        gameState.currentPiece.vx = 0;
-        gameState.currentPiece.vy = 0;
-        updateDeckCount();
-        console.log(`Spawned piece: ${gameState.currentPiece.name}, Remaining deck count: ${activeDeck.length}`);
+    if (gameState.activeDeck.length > 0) {
+        const randomIndex = Math.floor(Math.random() * gameState.activeDeck.length);
+        const piece = gameState.activeDeck.splice(randomIndex, 1)[0];
+        gameState.currentPiece = piece;
+        console.log("Spawned piece:", piece);
     } else {
-        console.log("Active deck is empty. Unable to spawn new piece.");
-        // Handle empty deck scenario (e.g., end the round, refill from static deck, etc.)
+        console.log("No more pieces in the active deck. Ending round...");
+        checkActiveDeck();
     }
 }
 

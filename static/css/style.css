@@ -186,14 +186,20 @@ body {
     margin-bottom: 20px;
 }
 
+#shop-items-and-refresh {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
 #shop-items {
+    flex-grow: 1;
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); /* Responsive grid layout */
     gap: 20px;
-    justify-items: center;
+    justify-items: left;
     margin-top: 10px;
-    margin-bottom: 10px;
-    width: 70%; /* Takes full width of the shop */
+    margin-bottom: 0px;
     padding: 0 20px; /* Adds horizontal padding for spacing */
 }
 
@@ -250,19 +256,28 @@ body {
 }
 
 #close-shop-button {
-    display: block;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     margin: 5px auto 10px;
-    padding: 15px 30px; /* Increased padding for more space around the text */
-    background-color: #f44336;
+    padding: 15px 30px;
+    background-color: #4CAF50;
     color: white;
     border: none;
     border-radius: 5px;
     cursor: pointer;
     transition: background-color 0.2s;
+    font-size: 18px;
+    font-weight: bold;
 }
 
 #close-shop-button:hover {
-    background-color: #d32f2f;
+    background-color: #45a049;
+}
+
+.play-symbol {
+    margin-left: 10px;
+    font-size: 24px;
 }
 
 #target-score-container {
@@ -522,7 +537,8 @@ button:hover {
     padding: 10px;
     min-height: 150px;
     border-radius: 10px; /* Added to make the corners rounded */
-
+    position: relative; /* Added to ensure the overlay is positioned correctly */
+    padding-bottom: 20px;
   }
   
   .item-grid {
@@ -531,14 +547,15 @@ button:hover {
     gap: 10px;
   }
   
-  .item {
-    width: SHOP_SIZE;
-    height: SHOP_SIZE;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    cursor: pointer;
+  .item-slot {
+    width: 75px;
+    height: 75px;
+    position: relative;
+    /* Removed 'left: 10%;' to prevent misalignment */
+    margin: 0 5px; /* Adds horizontal spacing between slots */
+    border: 2px solid #FFFFFF; /* Light white outline for placeholders */
+    border-radius: 10px;
+    background-color: transparent; /* No background tint */
   }
 
   .deck-grid {
@@ -671,4 +688,133 @@ button:hover {
     0% { opacity: 1; }
     80% { opacity: 1; }
     100% { opacity: 0; }
+}
+
+@keyframes fadeInOut {
+    0% { opacity: 0; transform: translate(-50%, -60%); }
+    10% { opacity: 1; transform: translate(-50%, -50%); }
+    90% { opacity: 1; transform: translate(-50%, -50%); }
+    100% { opacity: 0; transform: translate(-50%, -60%); }
+}
+
+#sell-confirmation {
+    position: absolute;
+    top: 20%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    padding: 10px 20px;
+    background-color: rgba(0, 128, 0, 0.8);
+    color: #FFD700;
+    border-radius: 5px;
+    font-size: 1.2em;
+    text-align: center;
+}
+
+#shop-buttons {
+    display: flex;
+    flex-direction: column; /* Stack buttons vertically */
+    gap: 10px; /* Space between buttons */
+    margin-right: 10px; /* Space above the buttons */
+}
+
+#refresh-shop-button,
+#freeze-shop-button {
+    padding: 10px 15px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+#refresh-shop-button {
+    background-color: #4CAF50;
+    color: white;
+}
+
+#refresh-shop-button:hover {
+    background-color: #45a049;
+}
+
+#refresh-shop-button:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}
+
+#freeze-shop-button {
+    background-color: #0000FF; /* Blue color to indicate freezing */
+    color: white;
+}
+
+#freeze-shop-button:hover {
+    background-color: #1E90FF; /* DodgerBlue on hover */
+}
+
+#freeze-shop-button:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}
+
+/* Blue tint for frozen shop items */
+#shop-items.shop-frozen .draggable-item img {
+    filter: hue-rotate(200deg) brightness(0.7);
+    pointer-events: none; /* Disable interactions */
+    opacity: 0.7;
+}
+
+/* Sell Overlay Styles */
+.sell-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+}
+
+.sell-overlay.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.sell-message {
+    background-color: rgba(255, 215, 0, 0.9);
+    color: #000;
+    padding: 20px;
+    border-radius: 10px;
+    font-size: 24px;
+    text-align: center;
+    box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+}
+
+.shop-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    padding-right: 10px;
+    padding-left: 10px;
+}
+
+#shop-gold-display {
+    display: flex;
+    align-items: center;
+    font-size: 18px;
+    color: #FFD700;
+}
+
+.gold-icon {
+    width: 24px;
+    height: 24px;
+    margin-right: 5px;
+}
+
+#shop-gold-count {
+    font-weight: bold;
 }

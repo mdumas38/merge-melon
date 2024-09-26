@@ -11,7 +11,7 @@ export function handleMouseMove(e, canvas) {
 
 export function handleMouseUp(e, currentPiece, canvas, pieces, spawnPiece, launchSound, lastThrowTime) {
     const currentTime = performance.now();
-    if (currentTime - lastThrowTime >= THROW_COOLDOWN && currentPiece) {
+    if (currentTime - lastThrowTime >= THROW_COOLDOWN) {
         const rect = canvas.getBoundingClientRect();
         const mouseX = e.clientX - rect.left;
         const mouseY = e.clientY - rect.top;

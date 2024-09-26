@@ -12,8 +12,16 @@ export function updateRound() {
 }
 
 export function updateGold() {
-    // Changed from 'gold' to 'gameState.gold'
-    document.getElementById('gold').textContent = gameState.gold;
+    const goldElement = document.getElementById('gold');
+    const shopGoldElement = document.getElementById('shop-gold-count');
+    
+    if (goldElement) {
+        goldElement.textContent = gameState.gold;
+    }
+    
+    if (shopGoldElement) {
+        shopGoldElement.textContent = gameState.gold;
+    }
 }
 
 export function deductGold(amount) {

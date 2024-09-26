@@ -1,5 +1,5 @@
 // render.js
-import { CANVAS_WIDTH, CANVAS_HEIGHT, GRAVITY, FRICTION, BOUNCE_FACTOR, CONTAINER, POWER_SCALING_FACTOR, POWER_MULTIPLIER } from './config.js';
+import { CANVAS_WIDTH, CANVAS_HEIGHT, GRAVITY, FRICTION, BOUNCE_FACTOR, CONTAINER, POWER_SCALING_FACTOR, POWER_MULTIPLIER, LEFT_WALL, RIGHT_WALL } from './config.js';
 import { gameState } from './gameState.js';
 
 // Existing drawPiece function with updates to handle features and added debug logs
@@ -194,31 +194,29 @@ export function drawContainer(ctx, container) {
     ctx.restore();
 }
 
-// New function to draw the deck count
-function drawDeckCount(ctx, deckCount, currentPiece) {
-    if (!currentPiece) return; // No current piece to display count next to
-
-    const padding = 10; // Padding between the ball and the deck count text
+// Updated function to draw the deck count in a fixed position
+function drawDeckCount(ctx, deckCount) {
+    const padding = 10;
     const fontSize = 16;
     ctx.font = `${fontSize}px Arial`;
-    ctx.fillStyle = '#FFFFFF'; // White color for visibility
+    ctx.fillStyle = '#FFFFFF';
     ctx.textAlign = 'left';
-    ctx.textBaseline = 'middle';
+    ctx.textBaseline = 'top';
 
-    // Calculate position next to the current piece
-    const textX = currentPiece.x + currentPiece.attributes.radius + padding;
-    const textY = currentPiece.y;
+    // Fixed position in the top-left corner
+    const textX = padding;
+    const textY = padding;
 
     const text = `Deck: ${gameState.activeDeck.length}`;
     const textMetrics = ctx.measureText(text);
     const textWidth = textMetrics.width;
-    const textHeight = fontSize; // Approximate height
+    const textHeight = fontSize;
 
     // Draw semi-transparent rectangle as background
     ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
-    ctx.fillRect(textX - 5, textY - textHeight / 2 - 5, textWidth + 10, textHeight + 10);
+    ctx.fillRect(textX - 5, textY - 5, textWidth + 10, textHeight + 10);
 
-    // Draw the text above the rectangle
+    // Draw the text
     ctx.fillStyle = '#FFFFFF';
     ctx.fillText(text, textX, textY);
 }
@@ -263,8 +261,8 @@ export function render(ctx, pieces, currentPiece, particles, imageCache, config)
     // Draw boundaries
     drawBoundaries(ctx, config);
 
-    // Draw container
-    drawContainer(ctx, CONTAINER);
+    // Draw walls
+    drawWalls(ctx, LEFT_WALL, RIGHT_WALL);
 }
 
 function drawSpawnIndicator(ctx, config) {
@@ -316,5 +314,19 @@ function drawForces(ctx, piece) {
         ctx.fill();
     });
 
+    ctx.restore();
+}
+
+// Update the drawContainer function to drawWalls
+export function drawWalls(ctx, leftWall, rightWall) {
+    ctx.save();
+    ctx.fillStyle = CONTAINER.color;
+    
+    // Draw left wall
+    ctx.fillRect(leftWall.x, leftWall.y, leftWall.width, leftWall.height);
+    
+    // Draw right wall
+    ctx.fillRect(rightWall.x, rightWall.y, rightWall.width, rightWall.height);
+    
     ctx.restore();
 }

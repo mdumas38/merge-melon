@@ -12,21 +12,22 @@ import { initGame } from './game.js';
 const startMenu = document.getElementById('start-menu');
 const startButton = document.getElementById('start-button');
 
-export const container = {
-    x: CONTAINER.x, // Top-left x-coordinate
-    y: CONTAINER.y, // Top-left y-coordinate
-    width: CONTAINER.width,
-    height: CONTAINER.height,
-    vx: 0,
-    vy: 0,
-    isStatic: true, // Indicates that this object doesn't move
-    attributes: {
-        radius: 0, // Not used for rectangular container
-        color: CONTAINER.color,
-        value: 0,
-        mass: Infinity, // Infinite mass to make it immovable
-    },
-    name: "Container"
+import { LEFT_WALL, RIGHT_WALL } from './config.js';
+
+// Remove the container object
+// export const container = { ... };
+
+// Add wall objects
+export const leftWall = {
+    ...LEFT_WALL,
+    isStatic: true,
+    name: "LeftWall"
+};
+
+export const rightWall = {
+    ...RIGHT_WALL,
+    isStatic: true,
+    name: "RightWall"
 };
 
 let debugMode = false; // Add a debug mode flag

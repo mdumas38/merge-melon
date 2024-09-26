@@ -9,8 +9,6 @@ import {
 import { handleMouseUp, handleMouseMove } from './input.js';
 import { gameState, getActiveDeck } from './gameState.js';
 import { attachEventListeners } from './events.js';
-import { getRandomShopItems } from './helper.js';
-import { openShop, closeShop } from './shop.js';
 import { 
     ALL_PIECE_TYPES, 
     SHOP_ITEMS,
@@ -18,7 +16,9 @@ import {
     CANVAS_WIDTH, 
     CANVAS_HEIGHT,
     BOUNCE_FACTOR,
-    END_ROUND_COOLDOWN } from './config.js';  
+    END_ROUND_COOLDOWN,
+    LEFT_WALL,
+    RIGHT_WALL } from './config.js';  
 import { 
     snapshotStaticDeck, 
     checkActiveDeck, 
@@ -30,8 +30,8 @@ import {
     initDeck
  } from './rounds.js';
 import { startBackgroundMusic, launchSound } from './audio.js'; // {{ edit_1 }} Import launchSound
-import { applyGravity, updateRotation, handleContainerCollision, checkMerge, handleCollision } from './physics.js';
-import { container } from './main.js';
+import { applyGravity, updateRotation, handleWallCollisions, checkMerge, handleCollision } from './physics.js';
+import { updateRefreshButtonState } from './shop.js';
 
 // Define callback functions
 function resumeGame() {
@@ -94,7 +94,7 @@ export async function initGame() {
     gameState.round = 1;
     gameState.gold = 0;
     gameState.gameOver = false;
-    gameState.targetScore = 0;
+    gameState.targetScore = 10;
     gameState.lastTime = performance.now();
     gameState.animationId = null;
     gameState.lastThrowTime = 0;
@@ -137,10 +137,15 @@ export async function initGame() {
     });
 
     // Initialize deck before image loading
+    console.log("Initializing deck...");
     initDeck();
+    console.log("Taking a snapshot of the static deck...");
     snapshotStaticDeck(); // Take a snapshot after initial deck setup
+    console.log("Initializing round...");
     initializeRound();
-    spawnPiece();
+
+    // Add walls to the game state
+    gameState.walls = [LEFT_WALL, RIGHT_WALL];
 
     // Preload all images and wait for them to load
     try {
@@ -191,7 +196,8 @@ export function gameLoop(currentTime = performance.now()) {
             aimY: gameState.aimY,
             debugMode: gameState.debugMode,
             selectedPiece: gameState.selectedPiece,
-            deckCount: gameState.deckCount
+            deckCount: gameState.deckCount,
+            walls: gameState.walls
         };
 
         render(ctx, pieces, currentPiece, particles, imageCache, config);
@@ -243,7 +249,7 @@ export function update(deltaTime) {
         }
 
         // Collision with container walls
-        handleContainerCollision(piece, container);
+        handleWallCollisions(piece);
     }
 
     // Second pass: Handle collisions
@@ -344,6 +350,8 @@ export function resetGame() {
     } else {
         endGame();
     }
+    // After any code that might change the gold amount
+    updateRefreshButtonState();
 }
 
 // Handle game over

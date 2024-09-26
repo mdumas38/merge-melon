@@ -4,6 +4,7 @@ import { playSound, mergeSound } from './audio.js';
 import { updateScore } from './ui.js';
 import { gameState } from './gameState.js';
 import { startMergeAnimation } from './abilities.js';
+import { LEFT_WALL, RIGHT_WALL } from './config.js';
 
 // Reset forces before applying new ones
 function resetForces(piece) {
@@ -134,44 +135,24 @@ export function updateRotation(piece, deltaTime) {
 }
 
 // Updated collision handling function
-export function handleContainerCollision(piece, container) {
-    const left = container.x;
-    const right = container.x + container.width;
-    const bottom = container.y;
-    const top = container.y + container.height;
-
-    const isInside = piece.x > left && piece.x < right && piece.y < top && piece.y > bottom;
-
-    if (isInside) {
-        if (piece.x - piece.attributes.radius < left) {
-            piece.x = left + piece.attributes.radius;
-            piece.vx = Math.abs(piece.vx);
-        }
-        if (piece.x + piece.attributes.radius > right) {
-            piece.x = right - piece.attributes.radius;
-            piece.vx = -Math.abs(piece.vx);
-        }
-        if (piece.y + piece.attributes.radius > top) {
-            piece.y = top - piece.attributes.radius;
-            piece.vy = -Math.abs(piece.vy);
-        }
-    } else {
-        if (piece.y + piece.attributes.radius > bottom) {
-            if (piece.x + piece.attributes.radius < left) {
-                piece.vx = -Math.abs(piece.vx);
-            }
-            if (piece.x - piece.attributes.radius > right) {
-                piece.vx = Math.abs(piece.vx);
-            }
-            if (piece.y + piece.attributes.radius > top) {
-                piece.vy = -Math.abs(piece.vy);
-            }
-        }
+export function handleWallCollisions(piece) {
+    // Left wall collision
+    if (piece.x - piece.attributes.radius < LEFT_WALL.x + LEFT_WALL.width) {
+        piece.x = LEFT_WALL.x + LEFT_WALL.width + piece.attributes.radius;
+        piece.vx = Math.abs(piece.vx) * BOUNCE_FACTOR;
     }
-
-    // Apply friction after collision
-    piece.vx *= FRICTION;
-    piece.vy *= FRICTION;
+    
+    // Right wall collision
+    if (piece.x + piece.attributes.radius > RIGHT_WALL.x) {
+        piece.x = RIGHT_WALL.x - piece.attributes.radius;
+        piece.vx = -Math.abs(piece.vx) * BOUNCE_FACTOR;
+    }
+    
+    // Bottom collision (optional, depending on your game design)
+    if (piece.y + piece.attributes.radius > CANVAS_HEIGHT) {
+        piece.y = CANVAS_HEIGHT - piece.attributes.radius;
+        piece.vy = -Math.abs(piece.vy) * BOUNCE_FACTOR;
+    }
 }
 
 // Check for merges

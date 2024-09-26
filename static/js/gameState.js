@@ -32,6 +32,7 @@ export const gameState = {
     aimX: 0,
     aimY: 0,
     imageCache: {},
+    isShopFrozen: false, // New property to track if shop is frozen
 };
 
 // Getter and setter for activeDeck

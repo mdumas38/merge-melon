@@ -5,20 +5,20 @@ export const CANVAS_WIDTH = 900; // Adjust as needed
 export const CANVAS_HEIGHT = 900; // Adjust as needed
 
 // Game physics constants
-export const GRAVITY = 980; // pixels per second squared
-export const FRICTION = 0.98;
+export const GRAVITY = 1500; // pixels per second squared
+export const FRICTION = 0.99;
 export const BOUNCE_FACTOR = 0.3;
 export const SPAWN_Y = 100;
 export const MAX_VELOCITY = 2000;
 export const POWER_MULTIPLIER = 1;
 export const POWER_SCALING_FACTOR = 30;
-export const ROTATION_FRICTION = 0.99;
+export const ROTATION_FRICTION = 0.995;
 export const SPEED_THRESHOLD = 10;
 export const ANGULAR_VELOCITY_THRESHOLD = 0.01;
-export const VELOCITY_THRESHOLD = 100;
+export const VELOCITY_THRESHOLD = 50;
 export const END_ROUND_COOLDOWN = 2000;
 export const THROW_COOLDOWN = 500;
-export const TORQUE_FACTOR = 0.0008; // Adjust for more realistic rotation
+export const TORQUE_FACTOR = 0.0015; // Adjust for more realistic rotation
 export const CONTAINER_WIDTH = 300;
 export const CONTAINER_HEIGHT = 600;
 export const SHOP_SIZE = 40; // Adjust based on how large you want characters in the shop
@@ -35,6 +35,7 @@ export const CHARACTER_FAMILIES = {
             {
                 name: "Ladybug",
                 faceImage: "/static/images/characters/ladybug/ladybug_face.png",
+                bodyImage: "/static/images/characters/ladybug/ladybug.png",
                 tier: 1,
                 features: [],
                 abilities: [],
@@ -42,7 +43,7 @@ export const CHARACTER_FAMILIES = {
                     radius: 15,
                     color: "#FF0000",
                     value: 1,
-                    mass: 1,
+                    mass: 2,
                     angularVelocity: 1,
                     cost: 3
                 }
@@ -50,6 +51,7 @@ export const CHARACTER_FAMILIES = {
             {
                 name: "Mouse",
                 faceImage: "/static/images/characters/mouse/mouse_face.png",
+                bodyImage: "/static/images/characters/mouse/mouse.png",
                 tier: 2,
                 features: [
                     {
@@ -65,7 +67,7 @@ export const CHARACTER_FAMILIES = {
                     radius: 20,
                     color: "#808080",
                     value: 2,
-                    mass: 2,
+                    mass: 3,
                     angularVelocity: 1,
                     cost: 3
                 }
@@ -73,6 +75,7 @@ export const CHARACTER_FAMILIES = {
             {
                 name: "Bird",
                 faceImage: "/static/images/characters/bird/bird_face.png",
+                bodyImage: "/static/images/characters/bird/bird.png",
                 tier: 2,
                 features: [],
                 abilities: ["Float", "Eat"], // Updated abilities
@@ -80,7 +83,7 @@ export const CHARACTER_FAMILIES = {
                     radius: 25,
                     color: "#ADD8E6",
                     value: 4,
-                    mass: 3,
+                    mass: 4,
                     angularVelocity: 1,
                     cost: 3
                 }
@@ -88,6 +91,7 @@ export const CHARACTER_FAMILIES = {
             {
                 name: "Rabbit",
                 faceImage: "/static/images/characters/rabbit/rabbit_face.png",
+                bodyImage: "/static/images/characters/rabbit/rabbit.png",
                 tier: 3,
                 features: [
                     {
@@ -110,7 +114,7 @@ export const CHARACTER_FAMILIES = {
                     radius: 30,
                     color: "#FFFFFF",
                     value: 8,
-                    mass: 3,
+                    mass: 4,
                     angularVelocity: 1,
                     cost: 3
                 }
@@ -118,6 +122,7 @@ export const CHARACTER_FAMILIES = {
             {
                 name: "Fox",
                 faceImage: "/static/images/characters/fox/fox_face.png",
+                bodyImage: "/static/images/characters/fox/fox.png",
                 tier: 3,
                 features: [
                     {
@@ -133,7 +138,7 @@ export const CHARACTER_FAMILIES = {
                     radius: 35,
                     color: "#FFA500",
                     value: 16,
-                    mass: 4,
+                    mass: 5,
                     angularVelocity: 1,
                     cost: 3
                 }
@@ -141,6 +146,7 @@ export const CHARACTER_FAMILIES = {
             {
                 name: "Snake",
                 faceImage: "/static/images/characters/snake/snake_face.png",
+                bodyImage: "/static/images/characters/snake/snake.png",
                 tier: 4,
                 features: [],
                 abilities: ["Eat_2"],
@@ -148,7 +154,7 @@ export const CHARACTER_FAMILIES = {
                     radius: 40,
                     color: "#228B22",
                     value: 32,
-                    mass: 5,
+                    mass: 6,
                     angularVelocity: 1,
                     cost: 3
                 }
@@ -156,6 +162,7 @@ export const CHARACTER_FAMILIES = {
             {
                 name: "Eagle",
                 faceImage: "/static/images/characters/eagle/eagle_face.png",
+                bodyImage: "/static/images/characters/eagle/eagle.png",
                 tier: 4,
                 features: [
                     {
@@ -171,7 +178,7 @@ export const CHARACTER_FAMILIES = {
                     radius: 45,
                     color: "#FFD700",
                     value: 64,
-                    mass: 3,
+                    mass: 7,
                     angularVelocity: 1,
                     cost: 3
                 }
@@ -179,6 +186,7 @@ export const CHARACTER_FAMILIES = {
             {
                 name: "Wolf",
                 faceImage: "/static/images/characters/wolf/wolf_face.png",
+                bodyImage: "/static/images/characters/wolf/wolf.png",
                 tier: 5,
                 features: [
                     {
@@ -194,7 +202,7 @@ export const CHARACTER_FAMILIES = {
                     radius: 50,
                     color: "#A9A9A9",
                     value: 128,
-                    mass: 6,
+                    mass: 9,
                     angularVelocity: 1,
                     cost: 3
                 }
@@ -202,6 +210,7 @@ export const CHARACTER_FAMILIES = {
             {
                 name: "Lion",
                 faceImage: "/static/images/characters/lion/lion_face.png",
+                bodyImage: "/static/images/characters/lion/lion.png",
                 tier: 6,
                 features: [
                     {
@@ -218,7 +227,7 @@ export const CHARACTER_FAMILIES = {
                     radius: 55,
                     color: "#DAA520",
                     value: 256,
-                    mass: 7,
+                    mass: 10,
                     angularVelocity: 1,
                     cost: 3
                 }
@@ -234,10 +243,25 @@ export const ALL_PIECE_TYPES = [
 ];
 // Container configurations
 export const CONTAINER = {
-    x: CANVAS_WIDTH / 2 - CONTAINER_WIDTH / 2, // Centered horizontally with new width
-    y: CANVAS_HEIGHT - CONTAINER_HEIGHT,    // Positioned higher to accommodate new height
-    width: CONTAINER_WIDTH,                 // Updated width
-    height: CONTAINER_HEIGHT,                // Updated height
-    color: '#8B4513',           // Brown color for the container
-    lineWidth: 5                // Thickness of the container borders
+    x: CANVAS_WIDTH / 2 - CONTAINER_WIDTH / 2,
+    y: 0, // Start from the top of the screen
+    width: CONTAINER_WIDTH,
+    height: CANVAS_HEIGHT, // Stretch to the bottom of the screen
+    color: '#8B4513', // Brown color for the walls
+    lineWidth: 5 // Thickness of the walls
+};
+
+// Add configurations for left and right walls
+export const LEFT_WALL = {
+    x: CONTAINER.x,
+    y: 0,
+    width: CONTAINER.lineWidth,
+    height: CANVAS_HEIGHT
+};
+
+export const RIGHT_WALL = {
+    x: CONTAINER.x + CONTAINER.width - CONTAINER.lineWidth,
+    y: 0,
+    width: CONTAINER.lineWidth,
+    height: CANVAS_HEIGHT
 };
