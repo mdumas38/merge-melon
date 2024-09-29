@@ -29,7 +29,7 @@ import {
     spawnPiece,
     initDeck
  } from './rounds.js';
-import { startBackgroundMusic, launchSound } from './audio.js'; // {{ edit_1 }} Import launchSound
+import { startBackgroundMusic, launchSound, playSound, gameOver } from './audio.js'; // {{ edit_1 }} Import launchSound
 import { applyGravity, updateRotation, handleWallCollisions, checkMerge, handleCollision } from './physics.js';
 import { updateRefreshButtonState } from './shop.js';
 
@@ -70,6 +70,8 @@ function startGame() {
 
 // Initialize the game
 export async function initGame() {
+    console.log(">>> Function: initGame() - Initializing the game.");
+
     // Cancel any existing animation frames to prevent multiple game loops
     if (gameState.animationId) {
         cancelAnimationFrame(gameState.animationId);
@@ -94,14 +96,10 @@ export async function initGame() {
     gameState.round = 1;
     gameState.gold = 0;
     gameState.gameOver = false;
-    gameState.targetScore = 10;
+    gameState.targetScore = 0;
     gameState.lastTime = performance.now();
     gameState.animationId = null;
     gameState.lastThrowTime = 0;
-
-    function setLastThrowTime(time) {
-        gameState.lastThrowTime = time;
-    }
 
     updateTargetScore();
     updateScore();
@@ -149,20 +147,28 @@ export async function initGame() {
 
     // Preload all images and wait for them to load
     try {
+        console.log("Preloading images...");
         const cache1 = await preloadImages(ALL_PIECE_TYPES);
         const cache2 = await preloadImages(CHARACTER_FAMILIES.animals.characters);
+        const cache3 = await preloadImages(CHARACTER_FAMILIES.fruits.characters);
+        const cache4 = await preloadImages(CHARACTER_FAMILIES.celestials.characters);
+        
         // Merge caches
-        gameState.imageCache = { ...cache1, ...cache2 };
+        gameState.imageCache = { ...cache1, ...cache2, ...cache3, ...cache4 };
+        console.log("Images preloaded successfully.");
 
         // Start the game loop after images are loaded
+        console.log("Starting game loop.");
         gameLoop();
 
         // Start background music
         startBackgroundMusic(gameState.backgroundMusic); // Pass the background music element
+        console.log("Background music started.");
 
         const startMenu = document.getElementById('start-menu');
         startMenu.classList.remove('hidden');
         gameState.isPaused = true;
+        console.log("Start menu displayed. Game is paused.");
 
     } catch (error) {
         console.error("Error preloading images:", error);
@@ -171,8 +177,9 @@ export async function initGame() {
 
 // Main game loop
 export function gameLoop(currentTime = performance.now()) {
+
     if (gameState.gameOver) {
-        console.log("Game Over!");
+        console.log(">>> Game Over detected. Exiting game loop.");
         return;
     }
 
@@ -215,7 +222,11 @@ export function gameLoop(currentTime = performance.now()) {
 
 // Updated update function to separate physics and collision handling
 export function update(deltaTime) {
-    if (isNaN(deltaTime) || deltaTime <= 0) return;
+
+    if (isNaN(deltaTime) || deltaTime <= 0) {
+        console.warn("Invalid deltaTime detected. Skipping update.");
+        return;
+    }
 
     // First pass: Apply physics to all pieces
     for (let i = 0; i < gameState.pieces.length; i++) {
@@ -278,55 +289,11 @@ export function update(deltaTime) {
 
     // Check for round completion
     if (getActiveDeck().length === 0 && performance.now() - gameState.lastThrowTime >= END_ROUND_COOLDOWN) {
-        console.log("All pieces are at rest and deck is empty. Opening shop...");
+        console.log("All pieces are at rest and deck is empty. Ending round.");
         endRound();
     }
+
 }
-// // Start background music
-// export function startBackgroundMusic(backgroundMusic) {
-//     backgroundMusic.play().catch(error => {
-//         console.log("Audio play failed:", error);
-//         document.addEventListener('click', () => {
-//             backgroundMusic.play().catch(e => console.log("Audio play failed again:", e));
-//         }, { once: true });
-//     });
-// }
-
-// // Pause the game
-// export function pauseGame() {
-//     if (!isPaused) {
-//         isPaused = true;
-//         pauseMenu.style.display = 'block';
-//         cancelAnimationFrame(animationId);
-//         backgroundMusic.pause();
-
-//         canvas.removeEventListener('mousemove', handleMouseMove);
-//         canvas.removeEventListener('mouseup', handleMouseUp);
-//     }
-// }
-
-// // Resume the game
-// export function resumeGame() {
-//     if (isPaused) {
-//         isPaused = false;
-//         pauseMenu.style.display = 'none';
-//         lastTime = performance.now();
-//         gameLoop();
-//         backgroundMusic.play().catch(e => console.log("Audio resume failed:", e));
-
-//         canvas.removeEventListener('mousemove', handleMouseMove);
-//         canvas.removeEventListener('mouseup', handleMouseUp);
-//     }
-// }
-
-// // Toggle pause state
-// export function togglePause() {
-//     if (isPaused) {
-//         resumeGame();
-//     } else {
-//         pauseGame();
-//     }
-// }
 
 export function resetGame() {
     if (lives > 1) {
@@ -344,7 +311,7 @@ export function resetGame() {
             purchasedBalls,  // Pass the inventory (purchased balls)
             shopItems,  // Pass the shop items
             (value) => { isPaused = value; },
-            () => { cancelAnimationFrame(animationId); },
+            () => { cancelAnimationFrame(gameState.animationId); },
             imageCache
         );
     } else {
@@ -360,8 +327,8 @@ export function endGame() {
         resetGame(); // Function to reset the game state without ending it
     } else {
         gameState.gameOver = true;
-        cancelAnimationFrame(animationId);
-        gameOverSound.play();
+        cancelAnimationFrame(gameState.animationId);
+        playSound(gameOver); // Use the imported mergeSound
         document.getElementById('final-score').textContent = gameState.score;
         gameState.gameOverDiv.classList.remove('hidden');
         gameState.backgroundMusic.pause();

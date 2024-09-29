@@ -1,4 +1,5 @@
 import { gameState } from './gameState.js';
+import { nextRoundPhase1 } from './rounds.js';
 
 // Update score and round displays
 export function updateScore() {
@@ -60,4 +61,23 @@ export function updateDeckCount() {
         deckCountElement.textContent = deckCount;
     }
     console.log(`Updated deck count: ${deckCount}`);
+}
+
+export function showRoundEndScreen(baseReward, familyBonus, totalReward) {
+    const roundEndScreen = document.createElement('div');
+    roundEndScreen.id = 'round-end-screen';
+    roundEndScreen.innerHTML = `
+        <h2>Round Complete!</h2>
+        <p>Base Reward: ${baseReward} coins</p>
+        <p>Family Bonus: ${familyBonus} coins</p>
+        <p>Total Reward: ${totalReward} coins</p>
+        <button id="continue-button">Continue to Shop</button>
+    `;
+    document.body.appendChild(roundEndScreen);
+
+    const continueButton = document.getElementById('continue-button');
+    continueButton.addEventListener('click', () => {
+        roundEndScreen.remove();
+        nextRoundPhase1();
+    });
 }

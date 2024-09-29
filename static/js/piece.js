@@ -1,5 +1,5 @@
 // piece.js
-import { ALL_PIECE_TYPES, CANVAS_WIDTH, SPAWN_Y } from './config.js';
+import { ALL_PIECE_TYPES, CANVAS_WIDTH, SPAWN_Y, CHARACTER_FAMILIES } from './config.js';
 
 export function createPiece(character) {
     if (!character.attributes) {
@@ -10,7 +10,7 @@ export function createPiece(character) {
         ...character, // Spread all character properties
         x: CANVAS_WIDTH / 2,
         y: SPAWN_Y + character.attributes.radius,
-        tier: character.attributes.tier,
+        tier: character.tier,
         vx: 0,
         vy: 0,
         rotation: 0,
@@ -20,7 +20,8 @@ export function createPiece(character) {
         absorbing: false,
         forces: [], // Initialize forces array
         hasJumped: false, // Initialize hasJumped flag for abilities
-        id: null // Initialize id property
+        id: null, // Initialize id property
+        family: character.family // Add family property 
     };
     console.log(`Created new piece: ${newPiece.name} at (${newPiece.x}, ${newPiece.y})`);
     return newPiece;

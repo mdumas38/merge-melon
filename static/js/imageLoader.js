@@ -64,8 +64,6 @@ export async function preloadImages(characters) {
                 });
                 imagePromises.push(featurePromise);
             });
-        } else {
-            console.warn(`Character ${char.name} has no features.`);
         }
     });
 

@@ -1,4 +1,4 @@
-import { ALL_PIECE_TYPES, SHOP_ITEMS } from './config.js';
+import { ALL_PIECE_TYPES, SHOP_ITEMS, CHARACTER_FAMILIES } from './config.js';
 import { gameState } from './gameState.js'; // Updated import
 import { updateGold } from './ui.js';
 import { initializeRound } from './rounds.js';
@@ -23,28 +23,20 @@ export function openShop(shop, deckItems, inventoryItems, shopItems, setIsPaused
     enableDragAndDrop();
 
     const deckContainer = document.getElementById('deck-items');
-    const inventoryContainer = document.getElementById('inventory-items');
     const shopContainer = document.getElementById('shop-items');
 
     // Clear previous contents
     deckContainer.innerHTML = '';
-    inventoryContainer.innerHTML = '';
     shopContainer.innerHTML = '';
 
     // Populate deck items with placeholders and associate data
-    populateDeck(deckContainer, deckItems, gameState.imageCache, 8); // 4x2 grid has 8 slots
-
-    // Populate inventory items with placeholders
-    populateInventory(inventoryContainer, inventoryItems, gameState.imageCache, 20); // 5x4 grid has 20 slots
+    populateDeck(deckContainer, deckItems, gameState.imageCache, 28); // 7x4 grid has 28 slots
 
     // Populate shop items
     populateItems(shopContainer, shopItems, gameState.imageCache, 'shop');
 
     // Re-enable drag and drop after populating
     enableDragAndDrop();
-
-    // Listen for sell events (optional if using alerts in events.js)
-    // Alternatively, handle feedback within events.js
 
     const refreshButton = document.getElementById('refresh-shop-button');
     refreshButton.addEventListener('click', refreshShop);
@@ -98,47 +90,11 @@ function populateDeck(container, items, imageCache, totalSlots) {
             const piece = items[i];
             
             // Create a draggable item using the updated function with source 'deck'
-            const draggableItem = createDraggableItem(piece, 'deck'); // {{ edit_3 }}
+            const draggableItem = createDraggableItem(piece, 'deck');
             
             slotElement.appendChild(draggableItem);
             slotElement.dataset.pieceName = piece.name;
             slotElement.dataset.pieceIndex = draggableItem.id;
-            // Add other dataset attributes if necessary
-        } else {
-            slotElement.classList.add('placeholder');
-        }
-
-        container.appendChild(slotElement);
-    }
-}
-
-/**
- * Function to populate the inventory with draggable items
- * @param {HTMLElement} container - The inventory container element
- * @param {Array} items - Array of inventory items
- * @param {Object} imageCache - Cache of loaded images
- * @param {number} totalSlots - Total number of slots in the inventory
- */
-function populateInventory(container, items, imageCache, totalSlots) {
-    container.innerHTML = ''; // Clear existing inventory items
-
-    for (let i = 0; i < totalSlots; i++) {
-        const slotElement = document.createElement('div');
-        slotElement.classList.add('inventory-slot');
-
-        if (i < items.length) {
-            const piece = items[i];
-            
-            // Create a draggable item using the updated function with source 'inventory'
-            const draggableItem = createDraggableItem(piece, 'inventory'); // {{ edit_4 }}
-            
-            slotElement.appendChild(draggableItem);
-
-            slotElement.dataset.pieceName = piece.name;
-            slotElement.dataset.pieceIndex = draggableItem.id;
-            slotElement.dataset.pieceTier = piece.tier;
-            slotElement.dataset.pieceCost = piece.attributes.cost;
-            // Add other dataset attributes as needed
         } else {
             slotElement.classList.add('placeholder');
         }
@@ -155,7 +111,7 @@ function populateItems(container, items, imageCache, type) {
         itemElement.classList.add('item-slot');
 
         // **Create draggable item with updated function**
-        const draggableItem = createDraggableItem(item, type === 'shop' ? 'shop' : 'inventory'); // {{ existing edit }}
+        const draggableItem = createDraggableItem(item, type === 'shop' ? 'shop' : 'inventory');
         
         itemElement.appendChild(draggableItem);
 
@@ -193,7 +149,7 @@ export function buyItem(item, imageCache) {
             console.log(`Found empty inventory slot. Adding ${item.name} to inventory.`);
             
             // Create a draggable item using the updated function with source 'inventory'
-            const draggableItem = createDraggableItem(item, 'inventory'); // {{ edit_8 }}
+            const draggableItem = createDraggableItem(item, 'inventory');
             
             // Remove the placeholder class and append the draggable item
             emptySlot.classList.remove('placeholder');
@@ -212,25 +168,14 @@ export function buyItem(item, imageCache) {
     }
 }
 
-export function closeShop(setIsPaused, initDeck, spawnPiece) {
-    console.log("Closing shop. Initial deck:", gameState.staticDeck);
-
+export function closeShop(setIsPaused, setActiveDeckToStaticDeck, initDeck, restartGameLoop) {
     const shop = document.getElementById('shop');
-    if (shop) {
-        shop.classList.add('hidden');
-    } else {
-        console.error("Shop element not found");
-    }
-
+    shop.classList.add('hidden');
     setIsPaused(false);
-    console.log("setIsPaused(false):", setIsPaused);
-
+    setActiveDeckToStaticDeck();
+    initDeck();
     initializeRound();
-
-    console.log("Shop closed. Final deck state:", gameState.staticDeck);
-
-    const refreshButton = document.getElementById('refresh-shop-button');
-    refreshButton.removeEventListener('click', refreshShop);
+    restartGameLoop(); // Add this line to restart the game loop
 }
 
 // Helper function to check if all images for a character are loaded
@@ -311,10 +256,9 @@ export function drawCharacterImage(ctx, character, x, y, SHOP_SIZE, imageCache) 
  */
 function enableDragAndDrop() {
     const deckContainer = document.getElementById('deck-items');
-    const inventoryContainer = document.getElementById('inventory-items');
     const shopContainer = document.getElementById('shop-items');
 
-    [deckContainer, inventoryContainer, shopContainer].forEach(container => {
+    [deckContainer, shopContainer].forEach(container => {
         container.addEventListener('dragover', dragOver);
         container.addEventListener('dragleave', dragLeave);
         container.addEventListener('drop', drop);
@@ -333,7 +277,7 @@ function dragStart(e) {
     
     // Set the dragged element's ID and its source in the DataTransfer object
     e.dataTransfer.setData('text/plain', e.currentTarget.id);
-    e.dataTransfer.setData('source', e.currentTarget.dataset.source); // {{ edit_5 }}
+    e.dataTransfer.setData('source', e.currentTarget.dataset.source);
     e.dataTransfer.effectAllowed = 'move';
     
     console.log(`Data set in dataTransfer: ${e.dataTransfer.getData('text/plain')}, Source: ${e.dataTransfer.getData('source')}`);
@@ -354,7 +298,7 @@ function dragEnd(e) {
 function dragOver(e) {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
-    const dropzone = e.target.closest('.deck-slot, .inventory-slot, #deck-items, #inventory-items, #shop-container');
+    const dropzone = e.target.closest('.deck-slot, #deck-items, #shop-container');
     if (dropzone) {
         dropzone.classList.add('drag-over');
     }
@@ -365,7 +309,7 @@ function dragOver(e) {
  * @param {DragEvent} e 
  */
 function dragLeave(e) {
-    const dropzone = e.target.closest('.deck-slot, .inventory-slot, #deck-items, #inventory-items, #shop-container');
+    const dropzone = e.target.closest('.deck-slot, #deck-items, #shop-container');
     if (dropzone) {
         dropzone.classList.remove('drag-over');
     }
@@ -394,17 +338,15 @@ function drop(e) {
         return;
     }
     
-    const dropzone = e.target.closest('.deck-slot, .inventory-slot, #deck-items, #inventory-items, #shop-container');
+    const dropzone = e.target.closest('.deck-slot, #deck-items, #shop-container');
     if (!dropzone) {
         console.error("Dropzone not recognized.");
         return;
     }
     
     const target = dropzone.id === 'deck-items' ? 'deck' :
-                   dropzone.id === 'inventory-items' ? 'inventory' :
                    dropzone.id === 'shop-container' ? 'shop' :
                    dropzone.classList.contains('deck-slot') ? 'deck' :
-                   dropzone.classList.contains('inventory-slot') ? 'inventory' :
                    'shop';
 
     console.log(`Target dropzone: ${target}`);
@@ -424,15 +366,7 @@ function drop(e) {
             
             // Proceed with selling logic
             let piece;
-            if (source === 'inventory') {
-                piece = gameState.purchasedBalls.find(p => p.id === id);
-                if (!piece) {
-                    console.warn("Piece not found in purchasedBalls.");
-                    return;
-                }
-                gameState.purchasedBalls = gameState.purchasedBalls.filter(p => p !== piece);
-                console.log(`Removed piece from inventory: ${piece.name}`);
-            } else if (source === 'deck') {
+            if (source === 'deck') {
                 piece = gameState.staticDeck.find(p => p.id === id);
                 if (!piece) {
                     console.warn("Piece not found in staticDeck.");
@@ -448,11 +382,7 @@ function drop(e) {
             gameState.gold += 1;
             updateGold();
 
-            if (source === 'inventory') {
-                populateInventory(document.getElementById('inventory-items'), gameState.purchasedBalls, gameState.imageCache, 20);
-            } else if (source === 'deck') {
-                populateDeck(document.getElementById('deck-items'), gameState.staticDeck, gameState.imageCache, 8);
-            }
+            populateDeck(document.getElementById('deck-items'), gameState.staticDeck, gameState.imageCache, 28);
         }, 1000); // 2 seconds delay
         
         return;
@@ -492,34 +422,21 @@ function drop(e) {
             return;
         }
     
-        // Add piece to target (deck or inventory)
+        // Add piece to target (deck)
         if (target === 'deck') {
             gameState.staticDeck.push(newPiece);
-            populateDeck(document.getElementById('deck-items'), gameState.staticDeck, gameState.imageCache, 8);
+            populateDeck(document.getElementById('deck-items'), gameState.staticDeck, gameState.imageCache, 28);
             console.log(`${piece.name} added to deck.`);
-        } else if (target === 'inventory') {
-            gameState.purchasedBalls.push(newPiece);
-            populateInventory(document.getElementById('inventory-items'), gameState.purchasedBalls, gameState.imageCache, 20);
-            console.log(`${piece.name} added to inventory.`);
         }
     
         return;
     }
     
-    // **Handle items dropped from 'inventory' or 'deck'**
+    // **Handle items dropped from 'deck'**
     // **Find the piece using the assigned ID**
     let piece;
-    if (source === 'inventory') {
-        piece = gameState.purchasedBalls.find(p => p.id === id); // {{ edit_1 }} Use p.id === id
-        if (!piece) {
-            console.warn("Piece not found in purchasedBalls.");
-            return;
-        }
-        // Remove from inventory
-        gameState.purchasedBalls = gameState.purchasedBalls.filter(p => p !== piece);
-        console.log(`Removed piece from inventory: ${piece.name}`);
-    } else if (source === 'deck') {
-        piece = gameState.staticDeck.find(p => p.id === id); // {{ edit_1 }} Use p.id === id
+    if (source === 'deck') {
+        piece = gameState.staticDeck.find(p => p.id === id);
         if (!piece) {
             console.warn("Piece not found in staticDeck.");
             return;
@@ -530,10 +447,7 @@ function drop(e) {
     }
     
     // Add the piece to the target array
-    if (target === 'inventory') {
-        gameState.purchasedBalls.push(piece);
-        console.log(`Added piece to inventory: ${piece.name}`);
-    } else if (target === 'deck') {
+    if (target === 'deck') {
         gameState.staticDeck.push(piece);
         console.log(`Added piece to deck: ${piece.name}`);
     }
@@ -541,13 +455,12 @@ function drop(e) {
     // Update the gameState arrays in local storage or any persistent storage if applicable
     
     // Re-render the inventories and decks
-    populateDeck(document.getElementById('deck-items'), gameState.staticDeck, gameState.imageCache, 8);
-    populateInventory(document.getElementById('inventory-items'), gameState.purchasedBalls, gameState.imageCache, 20);
+    populateDeck(document.getElementById('deck-items'), gameState.staticDeck, gameState.imageCache, 28);
     
     console.log("Updated Inventory and Deck after drop action.");
 }
 
-function showSellConfirmation(pieceName) { // {{ new function }}
+function showSellConfirmation(pieceName) {
     const confirmation = document.createElement('div');
     confirmation.id = 'sell-confirmation';
     confirmation.innerText = `Sold ${pieceName} for 1 gold!`;
@@ -586,7 +499,7 @@ window.addEventListener('load', () => {
  * @param {string} source - The source container ('inventory', 'deck', or 'shop')
  * @returns {HTMLElement} - The created draggable item element
  */
-function createDraggableItem(piece, source) { // {{ existing edit }}
+function createDraggableItem(piece, source) {
     const item = document.createElement('div');
     item.classList.add('draggable-item');
     item.setAttribute('draggable', 'true');
@@ -597,7 +510,7 @@ function createDraggableItem(piece, source) { // {{ existing edit }}
     
     // Set the source and pieceName as data attributes
     item.dataset.source = source;
-    item.dataset.pieceName = piece.name; // {{ existing edit }}
+    item.dataset.pieceName = piece.name;
     
     // Create the img element
     const img = document.createElement('img');
@@ -610,6 +523,11 @@ function createDraggableItem(piece, source) { // {{ existing edit }}
     item.addEventListener('dragstart', dragStart);
     item.addEventListener('dragend', dragEnd);
     
+    if (source === 'shop') {
+        item.addEventListener('mouseenter', (e) => showTooltip(e, piece));
+        item.addEventListener('mouseleave', hideTooltip);
+    }
+
     return item;
 }
 
@@ -623,11 +541,11 @@ export function renderDeck(staticDeck, imageCache) {
     deckContainer.innerHTML = ''; // Clear existing deck items
     console.log("Cleared existing deck items.");
 
-    // Create 8 slots (4x2 grid)
-    for (let i = 0; i < 8; i++) {
-        console.log(`Creating slot ${i + 1} of 8.`);
+    // Create 28 slots (7x4 grid)
+    for (let i = 0; i < 28; i++) {
+        console.log(`Creating slot ${i + 1} of 28.`);
         const slot = document.createElement('div');
-        slot.classList.add('deck-slot'); // Ensure the deck-slot class is applied
+        slot.classList.add('deck-slot');
 
         if (i < staticDeck.length) {
             const piece = staticDeck[i];
@@ -700,3 +618,43 @@ export function enableShopInteractions() {
 
 // Add event listener for the Freeze Shop button
 document.getElementById('freeze-shop-button').addEventListener('click', toggleFreezeShop);
+
+// Add these functions after your existing functions
+
+export function showTooltip(event, character) {
+    const tooltip = document.getElementById('character-tooltip');
+    const shopContainer = document.getElementById('shop-container');
+    const shopRect = shopContainer.getBoundingClientRect();
+
+    // Find the correct family and evolution chain
+    const family = CHARACTER_FAMILIES[character.family];
+    if (!family || !family.evolutionChain) {
+        console.error(`Evolution chain not found for family: ${character.family}`);
+        return;
+    }
+
+    // Find the current character's position in the evolution chain
+    const currentIndex = family.evolutionChain.findIndex(evolution => evolution.name === character.name);
+    let nextEvolutionName = 'Max Level';
+    if (currentIndex !== -1 && currentIndex < family.evolutionChain.length - 1) {
+        nextEvolutionName = family.evolutionChain[currentIndex + 1].name;
+    }
+
+    tooltip.innerHTML = `
+        <div class="tooltip-title">${character.name}</div>
+        <div class="tooltip-ability">Ability: ${character.abilities ? character.abilities.join(', ') : 'None'}</div>
+        <div class="tooltip-evolution">Next Evolution: ${nextEvolutionName}</div>
+    `;
+
+    const x = event.clientX - shopRect.left + shopContainer.scrollLeft;
+    const y = event.clientY - shopRect.top + shopContainer.scrollTop;
+
+    tooltip.style.left = `${x + 10}px`;
+    tooltip.style.top = `${y + 10}px`;
+    tooltip.classList.remove('hidden');
+}
+
+export function hideTooltip() {
+    const tooltip = document.getElementById('character-tooltip');
+    tooltip.classList.add('hidden');
+}

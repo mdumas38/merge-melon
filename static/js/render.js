@@ -16,48 +16,48 @@ export function drawPiece(ctx, piece, imageCache) {
         return;
     }
 
-    // Iterate over each feature and draw it
-    if (piece.features && Array.isArray(piece.features)) {
-        piece.features.forEach((feature) => {
-            const key = `${piece.name}_${feature.type}`;
-            const featureImg = gameState.imageCache[key];
+    // // Iterate over each feature and draw it
+    // if (piece.features && Array.isArray(piece.features)) {
+    //     piece.features.forEach((feature) => {
+    //         const key = `${piece.name}_${feature.type}`;
+    //         const featureImg = gameState.imageCache[key];
 
-            if (featureImg) {
-                if (featureImg.complete) {
-                    const posX = feature.position.x;
-                    const posY = feature.position.y;
+    //         if (featureImg) {
+    //             if (featureImg.complete) {
+    //                 const posX = feature.position.x;
+    //                 const posY = feature.position.y;
 
-                    // Use feature.size if defined, else calculate based on radius and aspect ratio
-                    let drawWidth = feature.widthFactor * piece.attributes.radius * 2;
-                    let drawHeight = feature.heightFactor * piece.attributes.radius * 2;
+    //                 // Use feature.size if defined, else calculate based on radius and aspect ratio
+    //                 let drawWidth = feature.widthFactor * piece.attributes.radius * 2;
+    //                 let drawHeight = feature.heightFactor * piece.attributes.radius * 2;
 
-                    // Maintain aspect ratio if width and height are not both defined
-                    if (!feature.width || !feature.height) {
-                        const aspectRatio = featureImg.naturalWidth / featureImg.naturalHeight;
-                        if (aspectRatio > 1) {
-                            drawHeight = drawWidth / aspectRatio;
-                        } else if (aspectRatio < 1) {
-                            drawWidth = drawHeight * aspectRatio;
-                        }
-                    }
+    //                 // Maintain aspect ratio if width and height are not both defined
+    //                 if (!feature.width || !feature.height) {
+    //                     const aspectRatio = featureImg.naturalWidth / featureImg.naturalHeight;
+    //                     if (aspectRatio > 1) {
+    //                         drawHeight = drawWidth / aspectRatio;
+    //                     } else if (aspectRatio < 1) {
+    //                         drawWidth = drawHeight * aspectRatio;
+    //                     }
+    //                 }
 
-                    ctx.drawImage(
-                        featureImg,
-                        posX - drawWidth / 2, 
-                        posY - drawHeight / 2, 
-                        drawWidth, 
-                        drawHeight
-                    );
-                } else {
-                    console.warn(`Feature image for ${feature.type} of ${piece.name} is not loaded yet.`);
-                }
-            } else {
-                console.warn(`Feature image not found in imageCache with key: ${key} for ${piece.name}`);
-            }
-        });
-    } else {
-        console.log(`No features to draw for ${piece.name}.`);
-    }
+    //                 ctx.drawImage(
+    //                     featureImg,
+    //                     posX - drawWidth / 2, 
+    //                     posY - drawHeight / 2, 
+    //                     drawWidth, 
+    //                     drawHeight
+    //                 );
+    //             } else {
+    //                 console.warn(`Feature image for ${feature.type} of ${piece.name} is not loaded yet.`);
+    //             }
+    //         } else {
+    //             console.warn(`Feature image not found in imageCache with key: ${key} for ${piece.name}`);
+    //         }
+    //     });
+    // } else {
+    //     console.warn(`No features to draw for ${piece.name}.`);
+    // }
 
     // Clipping path for the main body/head
     ctx.beginPath();
@@ -93,7 +93,6 @@ export function drawPiece(ctx, piece, imageCache) {
             ctx.fillText(piece.attributes.value, 0, 0);
         }
     } else {
-        console.warn(`Face image not found in imageCache with key: ${faceKey} for ${piece.name}`);
         // Fallback: Draw colored circle
         ctx.beginPath();
         ctx.arc(0, 0, piece.attributes.radius, 0, Math.PI * 2);

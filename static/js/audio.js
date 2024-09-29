@@ -27,3 +27,5 @@ export const launchSound = new Audio('/static/audio/drop.mp3');
 
 // **New: Export mergeSound**
 export const mergeSound = new Audio('/static/audio/merge.mp3');
+
+export const gameOver = new Audio('/static/audio/gameover.mp3')

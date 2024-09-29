@@ -4,7 +4,7 @@ import { playSound, mergeSound } from './audio.js';
 import { updateScore } from './ui.js';
 import { gameState } from './gameState.js';
 import { startMergeAnimation } from './abilities.js';
-import { LEFT_WALL, RIGHT_WALL } from './config.js';
+import { LEFT_WALL, RIGHT_WALL, CHARACTER_FAMILIES} from './config.js';
 
 // Reset forces before applying new ones
 function resetForces(piece) {
@@ -40,6 +40,7 @@ export function applyFriction(piece) {
     
     piece.vx *= FRICTION;
     piece.vy *= FRICTION;
+    console.log(`Applied friction to piece: ${piece.name}, new vx: ${piece.vx}, new vy: ${piece.vy}`);
 }
 
 // Handle collision and record the collision force
@@ -83,6 +84,8 @@ export function handleCollision(piece1, piece2) {
         piece1.forces.push({ type: 'Collision', x: collisionForceX, y: collisionForceY });
         piece2.forces.push({ type: 'Collision', x: -collisionForceX, y: -collisionForceY });
 
+        console.log(`Collision forces recorded for ${piece1.name} and ${piece2.name}`);
+
         // Compute angular velocity changes based on tangential component
         piece1.angularVelocity += dpTan1 * TORQUE_FACTOR;
         piece2.angularVelocity += dpTan2 * TORQUE_FACTOR;
@@ -112,7 +115,7 @@ export function handleCollision(piece1, piece2) {
         }
 
         // After resolving collision, check for merging
-        checkMerge(piece1, piece2);
+        checkMerge(gameState.pieces);
     }
 }
 
@@ -156,28 +159,76 @@ export function handleWallCollisions(piece) {
 }
 
 // Check for merges
-export function checkMerge(existingPiece, releasedPiece) {
-    const { score } = gameState;
-    if (
-        existingPiece.attributes.value === releasedPiece.attributes.value &&
-        !existingPiece.merging &&
-        !releasedPiece.merging
-    ) {
-        const newPieceType = ALL_PIECE_TYPES.find(
-            (pt) => pt.attributes.value === existingPiece.attributes.value * 2
-        );
+export function checkMerge(pieces) {
+    console.log(`Checking for merges among pieces`);
+    for (let i = 0; i < pieces.length; i++) {
+        for (let j = i + 1; j < pieces.length; j++) {
+            const piece1 = pieces[i];
+            const piece2 = pieces[j];
 
-        if (newPieceType) {
-            startMergeAnimation(existingPiece, releasedPiece, newPieceType);
-            gameState.score += newPieceType.attributes.value;
-            updateScore();
-            playSound(mergeSound); // Use the imported mergeSound
-        } else {
-            console.warn(`No piece found with value ${existingPiece.attributes.value * 2} to merge into.`);
-        }
-    } else {
-        if (existingPiece.merging || releasedPiece.merging) {
-            console.log(`Cannot merge: One or both pieces are already merging.`);
+            if (piece1.merging || piece2.merging) {
+                console.log(`Skipping merge check for ${piece1.name} and ${piece2.name} because one is already merging.`);
+                continue;
+            }
+
+            const dx = piece1.x - piece2.x;
+            const dy = piece1.y - piece2.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            console.log(`Distance between ${piece1.name} and ${piece2.name}: ${distance}`);
+
+            if (distance <= piece1.attributes.radius + piece2.attributes.radius) {
+                console.log(`${piece1.name} and ${piece2.name} are close enough to merge.`);
+                // Check if pieces are from the same family and have the same tier
+                if (areMergeable(piece1, piece2)) {
+                    const newPieceType = getNextEvolution(piece1);
+                    if (newPieceType) {
+                        console.log(`Next evolution for ${piece1.name} is ${newPieceType.name}`);
+                        startMergeAnimation(piece1, piece2, newPieceType);
+                        console.log(`Merging ${piece1.name} and ${piece2.name} into ${newPieceType.name}`);
+                        return true;
+                    } else {
+                        console.log(`No further evolution available for ${piece1.name}`);
+                    }
+                } else {
+                    console.log(`${piece1.name} and ${piece2.name} are not mergeable.`);
+                }
+            } else {
+                console.log(`${piece1.name} and ${piece2.name} are too far apart to merge.`);
+            }
         }
     }
+    console.log(`No merges found.`);
+    return false;
+}
+
+
+function areMergeable(piece1, piece2) {
+    // Check if pieces are from the same family and have the same tier
+    const mergeable = piece1.family === piece2.family && piece1.tier === piece2.tier;
+    console.log(`Are ${piece1.name} and ${piece2.name} mergeable? ${mergeable}`);
+    return mergeable;
+}
+
+function getNextEvolution(piece) {
+    if (!piece.family) {
+        console.error(`Family not found for piece: ${piece.name}`);
+        return null;
+    }
+
+    const family = CHARACTER_FAMILIES[piece.family];
+    console.log(`Family: ${piece.family}`);
+    if (!family || !family.evolutionChain) {
+        console.error(`Evolution chain not found for family: ${piece.family}`);
+        return null;
+    }
+
+    const currentIndex = family.evolutionChain.findIndex(evolution => evolution.name === piece.name);
+    if (currentIndex === -1 || currentIndex === family.evolutionChain.length - 1) {
+        // Piece not found in evolution chain or is at max evolution
+        return null;
+    }
+
+    const nextEvolutionName = family.evolutionChain[currentIndex + 1].name;
+    console.log(`Next evolution for ${piece.name} is ${nextEvolutionName}`);
+    return ALL_PIECE_TYPES.find(p => p.name === nextEvolutionName);
 }
