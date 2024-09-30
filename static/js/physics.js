@@ -5,6 +5,7 @@ import { updateScore } from './ui.js';
 import { gameState } from './gameState.js';
 import { startMergeAnimation } from './abilities.js';
 import { createPiece } from './piece.js';
+import { createScoreSprite } from './abilities.js';
 
 // Add this constant at the top of the file
 const GROUND_FRICTION = 0.98; // Adjust this value to control the strength of ground friction
@@ -345,23 +346,23 @@ export  function isFruit(piece) {
 
 // Updated function to handle fruit eating with optimized collision detection
 export function eatFruit(animal, fruit) {
-    // Calculate squared distance between animal and fruit
     const dx = animal.x - fruit.x;
     const dy = animal.y - fruit.y;
     const distanceSquared = dx * dx + dy * dy;
     console.log(`Distance squared: ${distanceSquared}`);
-    // Calculate squared contact threshold to avoid using Math.sqrt
     const contactThreshold = (animal.attributes.radius + fruit.attributes.radius) ** 2;
     console.log(`Contact threshold: ${contactThreshold}`);
 
     if (distanceSquared <= contactThreshold) {
         console.log(`${animal.name} is eating a ${fruit.name}!`);
-        // Remove the fruit from the game
         gameState.pieces = gameState.pieces.filter(piece => piece !== fruit);
-        // Add the fruit's value to the player's score
-        gameState.score += fruit.attributes.value;
+        const scoreIncrease = fruit.attributes.value;
+        gameState.score += scoreIncrease;
         updateScore();
-        playSound(mergeSound); // Consider adding a specific eating sound
+        playSound(mergeSound);
+        
+        // Create and animate the score sprite
+        createScoreSprite(fruit.x, fruit.y, scoreIncrease);
     } else {
         console.log(`${animal.name} is not in contact with ${fruit.name}, cannot eat it.`);
     }

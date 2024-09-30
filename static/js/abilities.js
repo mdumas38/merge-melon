@@ -5,7 +5,7 @@ import { createPiece } from './piece.js';
 import { isFruit, canEatFruit, eatFruit } from './physics.js';
 
 // Add this new function to create and animate the score sprite
-function createScoreSprite(x, y, value) {
+export function createScoreSprite(x, y, value) {
     console.log(`Creating score sprite at (${x}, ${y}) with value: ${value}`);
     
     const gameContainer = document.getElementById('game-container');
