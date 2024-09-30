@@ -1,10 +1,6 @@
-import { toggleBackgroundMusic, startBackgroundMusic } from './audio.js';
-import { handleMouseMove, handleMouseUp } from './input.js';
+import { startBackgroundMusic } from './audio.js';
 import { gameState } from './gameState.js';
-import { ALL_PIECE_TYPES } from './config.js';
-import { initDeck, spawnPiece } from './rounds.js';
-import { updateGold } from './ui.js';
-import { closeShop } from './shop.js'; // Add this import
+import { initGame } from './game.js';
 
 export function attachEventListeners(callbacks) {
     const {

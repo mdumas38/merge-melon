@@ -33,6 +33,9 @@ export const gameState = {
     aimY: 0,
     imageCache: {},
     isShopFrozen: false, // New property to track if shop is frozen
+    isRedGlowActive: false, // New property to track red glow state
+    isRoundComplete: false, // New property to track round completion
+    ballInHand: true, // New property to track if a ball is in hand
 };
 
 // Getter and setter for activeDeck
@@ -40,4 +43,3 @@ export const getActiveDeck = () => gameState.activeDeck;
 export const updateActiveDeck = (newDeck) => {
     gameState.activeDeck = newDeck;
 };
-

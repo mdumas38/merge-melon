@@ -1,5 +1,6 @@
 // main.js
 import { initGame } from './game.js';
+import { LEFT_WALL, RIGHT_WALL } from './config.js';
 
 // Audio files
 // const launchSound = new Audio('/static/audio/drop.mp3');
@@ -7,8 +8,6 @@ import { initGame } from './game.js';
 // Add references to start menu elements
 const startMenu = document.getElementById('start-menu');
 const startButton = document.getElementById('start-button');
-
-import { LEFT_WALL, RIGHT_WALL } from './config.js';
 
 // Remove the container object
 // export const container = { ... };

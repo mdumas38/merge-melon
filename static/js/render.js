@@ -225,25 +225,22 @@ function drawDeckCount(ctx, deckCount) {
 export function render(ctx, pieces, currentPiece, particles, imageCache, config) {
     ctx.clearRect(0, 0, config.CANVAS_WIDTH, config.CANVAS_HEIGHT);
 
-    // Draw trajectory lines
-    drawTrajectoryLines(ctx, currentPiece, config.aimX, config.aimY, pieces, config);
-
-    // Draw pieces from Active Deck
-    for (const piece of pieces) { // **Use activeDeck instead of pieces or deck**
+    // Draw existing pieces
+    for (const piece of pieces) {
         drawPiece(ctx, piece, imageCache);
-        
-        // Visualize forces if debug mode is enabled and this is the selected piece
-        if (config.debugMode && piece === config.selectedPiece) {
-            drawForces(ctx, piece);
-        }
     }
 
-    // Draw current piece if it's not merging
-    if (currentPiece && !currentPiece.merging) {
-        drawPiece(ctx, currentPiece, imageCache);
+    // Only draw current piece and trajectory if round is not complete
+    if (!gameState.isRoundComplete) {
+        // Draw trajectory lines
+        drawTrajectoryLines(ctx, currentPiece, config.aimX, config.aimY, pieces, config);
 
-        // Draw deck count next to the current piece
-        drawDeckCount(ctx, config.deckCount, currentPiece);
+        // Draw current piece if it's not merging
+        if (currentPiece && !currentPiece.merging) {
+            drawPiece(ctx, currentPiece, imageCache);
+        }
+            // Draw deck count next to the current piece
+            drawDeckCount(ctx, config.deckCount, currentPiece);
     }
 
     // Draw particles

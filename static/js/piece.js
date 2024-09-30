@@ -23,7 +23,7 @@ export function createPiece(character) {
         id: null, // Initialize id property
         family: character.family // Add family property 
     };
-    console.log(`Created new piece: ${newPiece.name} at (${newPiece.x}, ${newPiece.y})`);
+    // console.log(`Created new piece: ${newPiece.name} at (${newPiece.x}, ${newPiece.y})`);
     return newPiece;
 }
 

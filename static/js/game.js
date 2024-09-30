@@ -30,8 +30,9 @@ import {
     initDeck
  } from './rounds.js';
 import { startBackgroundMusic, launchSound, playSound, gameOver } from './audio.js'; // {{ edit_1 }} Import launchSound
-import { applyGravity, updateRotation, handleWallCollisions, checkMerge, handleCollision } from './physics.js';
+import { applyGravity, updateRotation, handleWallCollisions, checkMerge, resetForces, updateVelocity, updatePosition, handleAllCollisions } from './physics.js';
 import { updateRefreshButtonState } from './shop.js';
+import { updateRedGlow } from './ui.js';
 
 // Define callback functions
 function resumeGame() {
@@ -55,7 +56,7 @@ function quitGame() {
     location.reload();
 }
 
-function restartGame() {
+export function restartGame() {
     console.log("Restarting game...");
     gameState.gameOverDiv.classList.add('hidden');
     initGame();
@@ -70,7 +71,7 @@ function startGame() {
 
 // Initialize the game
 export async function initGame() {
-    console.log(">>> Function: initGame() - Initializing the game.");
+    // console.log(">>> Function: initGame() - Initializing the game.");
 
     // Cancel any existing animation frames to prevent multiple game loops
     if (gameState.animationId) {
@@ -85,7 +86,7 @@ export async function initGame() {
     const ctx = gameState.canvas.getContext('2d');
     gameState.canvas.width = CANVAS_WIDTH;
     gameState.canvas.height = CANVAS_HEIGHT;
-    console.log(`Initialized canvas with width ${CANVAS_WIDTH} and height ${CANVAS_HEIGHT}.`);
+    // console.log(`Initialized canvas with width ${CANVAS_WIDTH} and height ${CANVAS_HEIGHT}.`);
 
     // Reset all game data to original state
     gameState.pieces = [];
@@ -96,7 +97,7 @@ export async function initGame() {
     gameState.round = 1;
     gameState.gold = 0;
     gameState.gameOver = false;
-    gameState.targetScore = 0;
+    gameState.targetScore = 10;
     gameState.lastTime = performance.now();
     gameState.animationId = null;
     gameState.lastThrowTime = 0;
@@ -135,11 +136,8 @@ export async function initGame() {
     });
 
     // Initialize deck before image loading
-    console.log("Initializing deck...");
     initDeck();
-    console.log("Taking a snapshot of the static deck...");
     snapshotStaticDeck(); // Take a snapshot after initial deck setup
-    console.log("Initializing round...");
     initializeRound();
 
     // Add walls to the game state
@@ -147,7 +145,7 @@ export async function initGame() {
 
     // Preload all images and wait for them to load
     try {
-        console.log("Preloading images...");
+        // console.log("Preloading images...");
         const cache1 = await preloadImages(ALL_PIECE_TYPES);
         const cache2 = await preloadImages(CHARACTER_FAMILIES.animals.characters);
         const cache3 = await preloadImages(CHARACTER_FAMILIES.fruits.characters);
@@ -155,20 +153,20 @@ export async function initGame() {
         
         // Merge caches
         gameState.imageCache = { ...cache1, ...cache2, ...cache3, ...cache4 };
-        console.log("Images preloaded successfully.");
+        // console.log("Images preloaded successfully.");
 
         // Start the game loop after images are loaded
-        console.log("Starting game loop.");
+        // console.log("Starting game loop.");
         gameLoop();
 
         // Start background music
         startBackgroundMusic(gameState.backgroundMusic); // Pass the background music element
-        console.log("Background music started.");
+        // console.log("Background music started.");
 
         const startMenu = document.getElementById('start-menu');
         startMenu.classList.remove('hidden');
         gameState.isPaused = true;
-        console.log("Start menu displayed. Game is paused.");
+        // console.log("Start menu displayed. Game is paused.");
 
     } catch (error) {
         console.error("Error preloading images:", error);
@@ -207,10 +205,10 @@ export function gameLoop(currentTime = performance.now()) {
             walls: gameState.walls
         };
 
+        checkRoundCompletion();
+
+        checkRedGlowCondition();
         render(ctx, pieces, currentPiece, particles, imageCache, config);
-
-        checkActiveDeck(); // **Check if Active Deck is empty**
-
         // Optionally, log the current score and round every second
         if (Math.floor(currentTime / 1000) !== Math.floor(gameState.lastTime / 1000)) {
             console.log(`Time: ${Math.floor(currentTime / 1000)}s | Score: ${gameState.score} | Round: ${gameState.round}`);
@@ -222,77 +220,83 @@ export function gameLoop(currentTime = performance.now()) {
 
 // Updated update function to separate physics and collision handling
 export function update(deltaTime) {
-
+    // 1. Validate deltaTime
     if (isNaN(deltaTime) || deltaTime <= 0) {
         console.warn("Invalid deltaTime detected. Skipping update.");
         return;
     }
 
-    // First pass: Apply physics to all pieces
-    for (let i = 0; i < gameState.pieces.length; i++) {
-        const piece = gameState.pieces[i];
+    // 2. Apply Physics to All Pieces
+    applyPhysics(deltaTime);
 
-        if (piece.merging || piece.isAtRest || piece.isStatic) continue;
+    handleAllCollisions();
 
+    // 3. Handle Merged Pieces
+    removeMergedPieces();
+
+    // 4. Check for Game Over Condition
+    checkGameOver();
+
+    // 5. Check for Round Completion
+    checkRoundCompletion();
+}
+
+/**
+ * Applies physics to all game pieces.
+ * @param {number} deltaTime - Time elapsed since the last frame in seconds.
+ */
+function applyPhysics(deltaTime) {
+    for (let piece of gameState.pieces) {
+        // Reset forces for the current frame
+        resetForces(piece);
+
+        // Apply gravity
         applyGravity(piece, deltaTime);
-        piece.x += piece.vx * deltaTime;
-        piece.y += piece.vy * deltaTime;
-        updateRotation(piece, deltaTime);
 
-        // Floor collision
-        if (piece.y + piece.attributes.radius > CANVAS_HEIGHT) {
-            piece.y = CANVAS_HEIGHT - piece.attributes.radius;
-            piece.vy *= -BOUNCE_FACTOR;
+        // Apply other forces (e.g., user input, collisions)
+        // Example: applyFriction(piece);
 
-            // If the piece is Rabbit and has jumped, reset the hasJumped flag
-            if (piece.name === "Rabbit" && piece.hasJumped) {
-                piece.hasJumped = true; 
-            }
-        }
+        // Update velocity based on accumulated forces
+        updateVelocity(piece, deltaTime);
 
-        // Wall collisions
-        if (piece.x - piece.attributes.radius < 0) {
-            piece.x = piece.attributes.radius;
-            piece.vx *= -BOUNCE_FACTOR;
-        } else if (piece.x + piece.attributes.radius > CANVAS_WIDTH) {
-            piece.x = CANVAS_WIDTH - piece.attributes.radius;
-            piece.vx *= -BOUNCE_FACTOR;
-        }
+        // Update position based on velocity
+        updatePosition(piece, deltaTime);
 
-        // Collision with container walls
-        handleWallCollisions(piece);
+        // Handle Boundary Collisions
+        handleWallCollisions(piece, LEFT_WALL, RIGHT_WALL);
     }
+}
 
-    // Second pass: Handle collisions
-    for (let i = 0; i < gameState.pieces.length; i++) {
-        const piece1 = gameState.pieces[i];
-
-        if (!piece1 || piece1.merging || piece1.isAtRest || piece1.isStatic) continue;
-
-        for (let j = i + 1; j < gameState.pieces.length; j++) {
-            const piece2 = gameState.pieces[j];
-            if (!piece2 || piece2.merging || piece2.isAtRest || piece2.isStatic) continue;
-
-            if (handleCollision(piece1, piece2)) {
-                checkMerge(piece1, piece2);
-            }
-        }
-    }
-
-    // Remove merged pieces
+/**
+ * Removes pieces that have been marked as merged.
+ */
+function removeMergedPieces() {
     gameState.pieces = gameState.pieces.filter(piece => !piece.merged);
+}
 
-    // Check game over condition
-    if (gameState.pieces.some(piece => piece.y - piece.attributes.radius <= 0)) {
+/**
+ * Checks and handles the game over condition.
+ */
+function checkGameOver() {
+    const isGameOver = gameState.pieces.some(piece => piece.y - piece.attributes.radius <= 0);
+    if (isGameOver) {
         endGame();
     }
+}
 
-    // Check for round completion
-    if (getActiveDeck().length === 0 && performance.now() - gameState.lastThrowTime >= END_ROUND_COOLDOWN) {
-        console.log("All pieces are at rest and deck is empty. Ending round.");
+/**
+ * Checks if the round has been completed and handles progression.
+ */
+export function checkRoundCompletion() {
+    const activeDeckEmpty = getActiveDeck().length === 0;
+    const cooldownElapsed = performance.now() - gameState.lastThrowTime >= END_ROUND_COOLDOWN;
+    // console.log("allPiecesAtRest:", allPiecesAtRest, "activeDeckEmpty:", activeDeckEmpty, "cooldownElapsed:", cooldownElapsed);
+
+    
+    if (activeDeckEmpty && cooldownElapsed) {
+        // console.log("All pieces are at rest and deck is empty. Ending round.");
         endRound();
     }
-
 }
 
 export function resetGame() {
@@ -332,5 +336,14 @@ export function endGame() {
         document.getElementById('final-score').textContent = gameState.score;
         gameState.gameOverDiv.classList.remove('hidden');
         gameState.backgroundMusic.pause();
+    }
+}
+
+// Add this function to the file
+function checkRedGlowCondition() {
+    const shouldGlow = gameState.activeDeck.length <= 3 && gameState.score < gameState.targetScore;
+    if (shouldGlow !== gameState.isRedGlowActive) {
+        gameState.isRedGlowActive = shouldGlow;
+        updateRedGlow(shouldGlow);
     }
 }

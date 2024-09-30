@@ -1,5 +1,5 @@
 import { THROW_COOLDOWN, POWER_SCALING_FACTOR, POWER_MULTIPLIER, MAX_VELOCITY } from './config.js';
-import { gameState } from './gameState.js';
+import { gameState, getActiveDeck } from './gameState.js';
 
 export function handleMouseMove(e, canvas) {
     const rect = canvas.getBoundingClientRect();
@@ -10,6 +10,11 @@ export function handleMouseMove(e, canvas) {
 }
 
 export function handleMouseUp(e, currentPiece, canvas, pieces, spawnPiece, launchSound, lastThrowTime) {
+    if (gameState.isRoundComplete || gameState.isPaused || !gameState.ballInHand) {
+        console.log("No ball in hand", "ball in hand:",!gameState.ballInHand);
+        return; // Ignore input if round is complete, game is paused, or no ball in hand
+    }
+
     const currentTime = performance.now();
     if (currentTime - lastThrowTime >= THROW_COOLDOWN) {
         const rect = canvas.getBoundingClientRect();
@@ -31,10 +36,20 @@ export function handleMouseUp(e, currentPiece, canvas, pieces, spawnPiece, launc
         currentPiece.vy = Math.max(Math.min(currentPiece.vy, MAX_VELOCITY), -MAX_VELOCITY);
 
         pieces.push(currentPiece);
-        launchSound.play(); // Use the passed launchSound
-        spawnPiece();
+        launchSound.play();
 
-        // **Update the lastThrowTime in gameState**
+        // Get the active deck length
+        const activeDeckLength = getActiveDeck().length;
+
+        // Check if this was the last piece (including the one in hand)
+        if (activeDeckLength === 0) {
+            gameState.ballInHand = false;
+            // No need to spawn a new piece
+        } else {
+            spawnPiece();
+        }
+
+        // Update the lastThrowTime in gameState
         gameState.lastThrowTime = currentTime;
     }
 }

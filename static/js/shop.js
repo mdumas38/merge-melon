@@ -29,6 +29,9 @@ export function openShop(shop, deckItems, inventoryItems, shopItems, setIsPaused
     deckContainer.innerHTML = '';
     shopContainer.innerHTML = '';
 
+    createParticles();
+
+
     // Populate deck items with placeholders and associate data
     populateDeck(deckContainer, deckItems, gameState.imageCache, 28); // 7x4 grid has 28 slots
 
@@ -110,10 +113,21 @@ function populateItems(container, items, imageCache, type) {
         const itemElement = document.createElement('div');
         itemElement.classList.add('item-slot');
 
-        // **Create draggable item with updated function**
+        // Create draggable item with updated function
         const draggableItem = createDraggableItem(item, type === 'shop' ? 'shop' : 'inventory');
         
         itemElement.appendChild(draggableItem);
+
+        // Add cost display for shop items
+        if (type === 'shop') {
+            const costDisplay = document.createElement('div');
+            costDisplay.classList.add('item-cost');
+            costDisplay.innerHTML = `
+                <span class="cost-value">${item.attributes.cost}</span>
+                <img src="/static/images/gold-coin.png" alt="Gold" class="cost-coin">
+            `;
+            itemElement.appendChild(costDisplay);
+        }
 
         container.appendChild(itemElement);
     });
@@ -138,9 +152,9 @@ function getGold() {
 export function buyItem(item, imageCache) {
     console.log(`Attempting to buy ${item.name} for ${item.attributes.cost} gold`);
 
-    if (gameState.gold >= item.attributes.cost) { // Check for sufficient gold
-        gameState.gold -= item.attributes.cost; // Deduct gold
-        gameState.purchasedBalls.push(item); // Add item to purchased balls
+    if (gameState.gold >= item.attributes.cost) {
+        gameState.gold -= item.attributes.cost;
+        gameState.purchasedBalls.push(item);
         console.log(`Successfully purchased ${item.name}. New gold balance: ${gameState.gold}`);
 
         const inventoryContainer = document.getElementById('inventory-items');
@@ -148,10 +162,8 @@ export function buyItem(item, imageCache) {
         if (emptySlot) {
             console.log(`Found empty inventory slot. Adding ${item.name} to inventory.`);
             
-            // Create a draggable item using the updated function with source 'inventory'
             const draggableItem = createDraggableItem(item, 'inventory');
             
-            // Remove the placeholder class and append the draggable item
             emptySlot.classList.remove('placeholder');
             emptySlot.appendChild(draggableItem);
             
@@ -160,11 +172,23 @@ export function buyItem(item, imageCache) {
             console.warn('No empty inventory slots available. Unable to add item to inventory.');
         }
 
-        console.log(`Bought ${item.name} for ${item.attributes.cost} gold. Total purchased balls: ${gameState.purchasedBalls.length}`);
-        
+        // Gray out and disable the purchased item in the shop
+        const shopItemElement = document.querySelector(`#shop-items .draggable-item[data-piece-name="${item.name}"]`);
+        console.log("Shop item element:", shopItemElement);
+        if (shopItemElement) {
+            shopItemElement.classList.add('purchased');
+            shopItemElement.draggable = false;
+            shopItemElement.removeEventListener('dragstart', dragStart);
+            shopItemElement.removeEventListener('dragend', dragEnd);
+            shopItemElement.removeEventListener('mouseenter', showTooltip);
+            shopItemElement.removeEventListener('mouseleave', hideTooltip);
+        }
+
+        updateGold();
+        updateRefreshButtonState();
     } else {
-        console.log(`Insufficient gold to purchase ${item.name}. Current gold: ${gameState.gold}, Required: ${item.attributes.cost}`);
-        alert('Insufficient gold to purchase this item.');
+        console.log(`Not enough gold to buy ${item.name}`);
+        alert("Not enough gold!");
     }
 }
 
@@ -264,7 +288,7 @@ function enableDragAndDrop() {
         container.addEventListener('drop', drop);
     });
 
-    console.log("Drag and drop events added to containers");
+    // console.log("Drag and drop events added to containers");
 }
 
 /**
@@ -421,6 +445,18 @@ function drop(e) {
             console.error(`Failed to create a new piece for '${piece.name}'.`);
             return;
         }
+
+        const shopItemElement = document.querySelector(`#shop-items .draggable-item[data-piece-name="${piece.name}"]`);
+        console.log("Shop item element:", shopItemElement);
+        if (shopItemElement) {
+            shopItemElement.classList.add('purchased');
+            shopItemElement.draggable = false;
+            shopItemElement.removeEventListener('dragstart', dragStart);
+            shopItemElement.removeEventListener('dragend', dragEnd);
+            shopItemElement.removeEventListener('mouseenter', showTooltip);
+            shopItemElement.removeEventListener('mouseleave', hideTooltip);
+        }
+
     
         // Add piece to target (deck)
         if (target === 'deck') {
@@ -523,7 +559,7 @@ function createDraggableItem(piece, source) {
     item.addEventListener('dragstart', dragStart);
     item.addEventListener('dragend', dragEnd);
     
-    if (source === 'shop') {
+    if (source === 'shop' || source === 'deck') {
         item.addEventListener('mouseenter', (e) => showTooltip(e, piece));
         item.addEventListener('mouseleave', hideTooltip);
     }
@@ -543,36 +579,36 @@ export function renderDeck(staticDeck, imageCache) {
 
     // Create 28 slots (7x4 grid)
     for (let i = 0; i < 28; i++) {
-        console.log(`Creating slot ${i + 1} of 28.`);
+        // console.log(`Creating slot ${i + 1} of 28.`);
         const slot = document.createElement('div');
         slot.classList.add('deck-slot');
 
         if (i < staticDeck.length) {
             const piece = staticDeck[i];
-            console.log(`Adding piece to slot ${i + 1}:`, piece);
+            // console.log(`Adding piece to slot ${i + 1}:`, piece);
             
             // Create a draggable item using the same pattern
             const draggableItem = createDraggableItem(piece, 'deck');
 
             slot.appendChild(draggableItem);
-            console.log(`Deck item added to slot ${i + 1}.`);
+            // console.log(`Deck item added to slot ${i + 1}.`);
 
             // Add data attributes to store piece information
             slot.dataset.pieceName = piece.name;
             slot.dataset.pieceIndex = draggableItem.id;
-            console.log(`Piece ${piece.name} added to slot ${i + 1}.`);
-            console.log(`Slot ${i + 1} data attributes:`, slot.dataset);
+            // console.log(`Piece ${piece.name} added to slot ${i + 1}.`);
+            // console.log(`Slot ${i + 1} data attributes:`, slot.dataset);
         } else {
             // Empty slot
             slot.classList.add('placeholder');
-            console.log(`Slot ${i + 1} is empty.`);
+            // console.log(`Slot ${i + 1} is empty.`);
         }
 
         deckContainer.appendChild(slot);
-        console.log(`Slot ${i + 1} appended to deck container.`);
+        // console.log(`Slot ${i + 1} appended to deck container.`);
     }
 
-    console.log("Deck rendered in the shop.");
+    // console.log("Deck rendered in the shop.");
 }
 
 // Add a new toggleFreezeShop function
@@ -644,6 +680,7 @@ export function showTooltip(event, character) {
         <div class="tooltip-title">${character.name}</div>
         <div class="tooltip-ability">Ability: ${character.abilities ? character.abilities.join(', ') : 'None'}</div>
         <div class="tooltip-evolution">Next Evolution: ${nextEvolutionName}</div>
+        <div class="tooltip-value">Value: ${character.attributes.value}</div>
     `;
 
     const x = event.clientX - shopRect.left + shopContainer.scrollLeft;
@@ -657,4 +694,23 @@ export function showTooltip(event, character) {
 export function hideTooltip() {
     const tooltip = document.getElementById('character-tooltip');
     tooltip.classList.add('hidden');
+}
+
+// Add this function to create particles
+function createParticles() {
+    const particleContainer = document.createElement('div');
+    particleContainer.className = 'particle-container';
+    document.getElementById('shop').appendChild(particleContainer);
+
+    for (let i = 0; i < 50; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'particle';
+        particle.style.left = Math.random() * 100 + '%';
+        particle.style.top = Math.random() * 100 + '%';
+        particle.style.width = Math.random() * 5 + 'px';
+        particle.style.height = particle.style.width;
+        particle.style.animationDuration = Math.random() * 3 + 2 + 's';
+        particle.style.animationDelay = Math.random() * 2 + 's';
+        particleContainer.appendChild(particle);
+    }
 }

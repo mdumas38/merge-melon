@@ -5,9 +5,9 @@ export const CANVAS_WIDTH = 900; // Adjust as needed
 export const CANVAS_HEIGHT = 900; // Adjust as needed
 
 // Game physics constants
-export const GRAVITY = 1500; // pixels per second squared
-export const FRICTION = 0.99;
-export const BOUNCE_FACTOR = 0.3;
+export const GRAVITY = 980; // pixels per second squared
+export const FRICTION = 0.985;
+export const BOUNCE_FACTOR = 0.2;
 export const SPAWN_Y = 100;
 export const MAX_VELOCITY = 2000;
 export const POWER_MULTIPLIER = 1;
@@ -16,13 +16,14 @@ export const ROTATION_FRICTION = 0.995;
 export const SPEED_THRESHOLD = 10;
 export const ANGULAR_VELOCITY_THRESHOLD = 0.01;
 export const VELOCITY_THRESHOLD = 50;
-export const END_ROUND_COOLDOWN = 2000;
+export const END_ROUND_COOLDOWN = 3000;
 export const THROW_COOLDOWN = 500;
 export const TORQUE_FACTOR = 0.0015; // Adjust for more realistic rotation
 export const CONTAINER_WIDTH = 300;
 export const CONTAINER_HEIGHT = 600;
 export const SHOP_SIZE = 40; // Adjust based on how large you want characters in the shop
 export const SHOP_ITEMS = 3;
+export const GRAVITY_MULTIPLIER = 1.5; // Gravity multiplier when Saturn is present
 
 
 export const INITIAL_DECK_VALUES = [0, 0, 1, 1, 2, 2];
@@ -60,13 +61,13 @@ export const CHARACTER_FAMILIES = {
                 faceImage: "/static/images/characters/family/animals/mouse/mouse_face.png",
                 bodyImage: "/static/images/characters/family/animals/mouse/mouse.png",
                 tier: 2,
-                abilities: ["Combine into a Cat (3 points)", "Eat Cherry (1 point)"],
+                abilities: ["Combine into a Cat (3 points)", "Eat Cherry (1 point)", "Eat Fruit"],
                 attributes: {
                     radius: 20,
                     color: "#808080",
                     value: 3,
                     mass: 3,
-                    angularVelocity: 1.2,
+                    angularVelocity: 1,
                     cost: 1
                 },
                 family: "animals"
@@ -76,13 +77,13 @@ export const CHARACTER_FAMILIES = {
                 faceImage: "/static/images/characters/family/animals/cat/cat_face.png",
                 bodyImage: "/static/images/characters/family/animals/cat/cat.png",
                 tier: 3,
-                abilities: ["Combine into a Dog (6 points)", "Eat Strawberry (3 points)"],
+                abilities: ["Combine into a Dog (6 points)", "Eat Strawberry (3 points)", "Eat Fruit"],
                 attributes: {
                     radius: 25,
                     color: "#FFA500",
                     value: 6,
                     mass: 4,
-                    angularVelocity: 1.4,
+                    angularVelocity: 1,
                     cost: 2
                 },
                 family: "animals"
@@ -92,13 +93,13 @@ export const CHARACTER_FAMILIES = {
                 faceImage: "/static/images/characters/family/animals/doggo/doggo_face.png",
                 bodyImage: "/static/images/characters/family/animals/doggo/doggo.png",
                 tier: 4,
-                abilities: ["Combine into a Bear (12 points)", "Eat apple (20 points)"],
+                abilities: ["Combine into a Bear (12 points)", "Eat apple (20 points)", "Eat Fruit"],
                 attributes: {
                     radius: 30,
                     color: "#8B4513",
                     value: 12,
                     mass: 5,
-                    angularVelocity: 1.6,
+                    angularVelocity: 1,
                     cost: 2
                 },
                 family: "animals"
@@ -108,13 +109,13 @@ export const CHARACTER_FAMILIES = {
                 faceImage: "/static/images/characters/family/animals/bear/bear_face.png",
                 bodyImage: "/static/images/characters/family/animals/bear/bear.png",
                 tier: 5,
-                abilities: ["Combine into an Elephant (25 points)", "Eat melon (50 points)"],
+                abilities: ["Combine into an Elephant (25 points)", "Eat Pineapple (50 points)", "Eat Fruit"],
                 attributes: {
                     radius: 35,
                     color: "#8B4513",
                     value: 25,
                     mass: 7,
-                    angularVelocity: 1.8,
+                    angularVelocity: 1,
                     cost: 5
                 },
                 family: "animals"
@@ -124,13 +125,13 @@ export const CHARACTER_FAMILIES = {
                 faceImage: "/static/images/characters/family/animals/elephant/elephant_face.png",
                 bodyImage: "/static/images/characters/family/animals/elephant/elephant.png",
                 tier: 6,
-                abilities: ["Combine into a Whale (50 points)", "Eat watermelon (150 points)"],
+                abilities: ["Combine into a Whale (50 points)", "Eat watermelon (150 points)", "Eat Fruit"],
                 attributes: {
                     radius: 40,
                     color: "#808080",
                     value: 50,
                     mass: 10,
-                    angularVelocity: 2,
+                    angularVelocity: 1,
                     cost: 10
                 },
                 family: "animals"
@@ -158,7 +159,7 @@ export const CHARACTER_FAMILIES = {
                     color: "#000000",
                     value: 1,
                     mass: 1,
-                    angularVelocity: 0.5,
+                    angularVelocity: 1,
                     cost: 1
                 },
                 family: "tech_storage"
@@ -174,7 +175,7 @@ export const CHARACTER_FAMILIES = {
                     color: "#8B4513",
                     value: 6,
                     mass: 2,
-                    angularVelocity: 0.7,
+                    angularVelocity: 1,
                     cost: 2
                 },
                 family: "tech_storage"
@@ -190,7 +191,7 @@ export const CHARACTER_FAMILIES = {
                     color: "#000000",
                     value: 11,
                     mass: 3,
-                    angularVelocity: 0.9,
+                    angularVelocity: 1,
                     cost: 5
                 },
                 family: "tech_storage"
@@ -206,7 +207,7 @@ export const CHARACTER_FAMILIES = {
                     color: "#000000",
                     value: 27,
                     mass: 4,
-                    angularVelocity: 1.1,
+                    angularVelocity: 1,
                     cost: 7
                 },
                 family: "tech_storage"
@@ -222,7 +223,7 @@ export const CHARACTER_FAMILIES = {
                     color: "#C0C0C0",
                     value: 59,
                     mass: 5,
-                    angularVelocity: 1.3,
+                    angularVelocity: 1,
                     cost: 10
                 },
                 family: "tech_storage"
@@ -246,11 +247,11 @@ export const CHARACTER_FAMILIES = {
                 tier: 1,
                 abilities: ["Combine into a Strawberry (2 points)"],
                 attributes: {
-                    radius: 10,
+                    radius: 15,
                     color: "#FF0000",
                     value: 1,
                     mass: 1,
-                    angularVelocity: 2,
+                    angularVelocity: 1,
                     cost: 1
                 },
                 family: "fruits"
@@ -262,11 +263,11 @@ export const CHARACTER_FAMILIES = {
                 tier: 2,
                 abilities: ["Combine into a Raisin (5 points)"],
                 attributes: {
-                    radius: 15,
+                    radius: 25,
                     color: "#FF69B4",
                     value: 2,
                     mass: 2,
-                    angularVelocity: 1.8,
+                    angularVelocity: 1,
                     cost: 2
                 },
                 family: "fruits"
@@ -278,11 +279,11 @@ export const CHARACTER_FAMILIES = {
                 tier: 3,
                 abilities: ["Combine into an Apple (10 points)"],
                 attributes: {
-                    radius: 20,
+                    radius: 35,
                     color: "#800080",
                     value: 5,
                     mass: 3,
-                    angularVelocity: 1.6,
+                    angularVelocity: 1,
                     cost: 4
                 },
                 family: "fruits"
@@ -294,11 +295,11 @@ export const CHARACTER_FAMILIES = {
                 tier: 4,
                 abilities: ["Combine into a Pineapple (20 points)"],
                 attributes: {
-                    radius: 25,
+                    radius: 50,
                     color: "#FF0000",
                     value: 10,
                     mass: 4,
-                    angularVelocity: 1.4,
+                    angularVelocity: 1,
                     cost: 7
                 },
                 family: "fruits"
@@ -310,11 +311,11 @@ export const CHARACTER_FAMILIES = {
                 tier: 5,
                 abilities: ["Combine into a Melon (35 points)", "Gain 1 X when created"],
                 attributes: {
-                    radius: 30,
+                    radius: 70,
                     color: "#FFD700",
                     value: 20,
                     mass: 5,
-                    angularVelocity: 1.2,
+                    angularVelocity: 1,
                     cost: 11
                 },
                 family: "fruits"
@@ -342,7 +343,7 @@ export const CHARACTER_FAMILIES = {
                     color: "#A9A9A9",
                     value: 1,
                     mass: 2,
-                    angularVelocity: 0.5,
+                    angularVelocity: 1,
                     cost: 1
                 },
                 family: "celestials"
@@ -358,7 +359,7 @@ export const CHARACTER_FAMILIES = {
                     color: "#F0F0F0",
                     value: 3,
                     mass: 3,
-                    angularVelocity: 0.7,
+                    angularVelocity: 1,
                     cost: 2
                 },
                 family: "celestials"
@@ -374,7 +375,7 @@ export const CHARACTER_FAMILIES = {
                     color: "#0000FF",
                     value: 7,
                     mass: 5,
-                    angularVelocity: 0.9,
+                    angularVelocity: 1,
                     cost: 5
                 },
                 family: "celestials"
@@ -390,7 +391,7 @@ export const CHARACTER_FAMILIES = {
                     color: "#FFA500",
                     value: 15,
                     mass: 8,
-                    angularVelocity: 1.1,
+                    angularVelocity: 1,
                     cost: 7
                 },
                 family: "celestials"
@@ -400,14 +401,15 @@ export const CHARACTER_FAMILIES = {
                 faceImage: "/static/images/characters/family/celestials/jupiter/jupiter_face.png",
                 bodyImage: "/static/images/characters/family/celestials/jupiter/jupiter.png",
                 tier: 5,
-                abilities: ["Combine into a Sun (70 points)", "Jupiter is very bouncy"],
+                abilities: ["Combine into a Sun (70 points)", "Extra Bouncy"],
                 attributes: {
                     radius: 45,
                     color: "#FFA07A",
                     value: 30,
                     mass: 12,
-                    angularVelocity: 1.3,
-                    cost: 10
+                    angularVelocity: 1,
+                    cost: 10,
+                    bounceFactor: 0.5
                 },
                 family: "celestials"
             },
@@ -415,14 +417,14 @@ export const CHARACTER_FAMILIES = {
                 name: "Asteroid",
                 faceImage: "/static/images/characters/family/celestials/asteroid/asteroid_face.png",
                 bodyImage: "/static/images/characters/family/celestials/asteroid/asteroid.png",
-                tier: null,
+                tier: 0,
                 abilities: ["Cannot be combined", "No effect"],
                 attributes: {
-                    radius: 10,
+                    radius: 20,
                     color: "#808080",
                     value: 0,
                     mass: 1,
-                    angularVelocity: 2.5,
+                    angularVelocity: 1,
                     cost: 0
                 },
                 family: "celestials"
@@ -461,3 +463,4 @@ export const RIGHT_WALL = {
     width: CONTAINER.lineWidth,
     height: CANVAS_HEIGHT
 };
+
