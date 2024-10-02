@@ -12,69 +12,67 @@ const GROUND_FRICTION = 0.98; // Adjust this value to control the strength of gr
 
 // Reset forces before applying new ones
 export function resetForces(piece) {
-    piece.forces = [];
+    piece.physics.forces = [];
 }
 
 // Apply gravity and record the force
 export function applyGravity(piece, deltaTime) {
     resetForces(piece);
     
-    let gravityForce = GRAVITY * piece.attributes.mass;
+    let gravityForce = GRAVITY * piece.physics.mass;
 
-    // Check for Saturn pieces in the game
     const saturnPresent = gameState.pieces.some(p => p.name === "Saturn");
     
     if (saturnPresent) {
         gravityForce *= GRAVITY_MULTIPLIER;
     }
 
-    // Check for "Float" ability
     if (piece.abilities && piece.abilities.includes("Float")) {
-        gravityForce *= 0.5; // Reduce gravity by 50%
+        gravityForce *= 0.5;
     }
 
-    piece.forces.push({ type: 'Gravity', x: 0, y: gravityForce });
+    piece.physics.forces.push({ type: 'Gravity', x: 0, y: gravityForce });
 }
 
 // Apply friction and record the force
 export function applyFriction(piece) {
-    if (typeof piece.vx !== 'number' || typeof piece.vy !== 'number') {
-        console.error(`Invalid velocity values for piece ${piece.name}: vx=${piece.vx}, vy=${piece.vy}`);
-        piece.vx = piece.vy = 0;
+    if (typeof piece.physics.vx !== 'number' || typeof piece.physics.vy !== 'number') {
+        console.error(`Invalid velocity values for piece ${piece.name}: vx=${piece.physics.vx}, vy=${piece.physics.vy}`);
+        piece.physics.vx = piece.physics.vy = 0;
     }
     
     // Apply air friction
-    const airFrictionForceX = -FRICTION * piece.vx;
-    const airFrictionForceY = -FRICTION * piece.vy;
-    piece.forces.push({ type: 'Air Friction', x: airFrictionForceX, y: airFrictionForceY });
+    const airFrictionForceX = -FRICTION * piece.physics.vx;
+    const airFrictionForceY = -FRICTION * piece.physics.vy;
+    piece.physics.forces.push({ type: 'Air Friction', x: airFrictionForceX, y: airFrictionForceY });
     
     // Apply ground friction if the piece is touching the bottom or walls
     if (isOnGround(piece) || isTouchingWalls(piece)) {
-        piece.vx *= GROUND_FRICTION;
-        piece.forces.push({ type: 'Ground Friction', x: piece.vx * (1 - GROUND_FRICTION), y: 0 });
+        piece.physics.vx *= GROUND_FRICTION;
+        piece.physics.forces.push({ type: 'Ground Friction', x: piece.physics.vx * (1 - GROUND_FRICTION), y: 0 });
     }
     
-    console.log(`Applied friction to piece: ${piece.name}, new vx: ${piece.vx}, new vy: ${piece.vy}`);
+    console.log(`Applied friction to piece: ${piece.name}, new vx: ${piece.physics.vx}, new vy: ${piece.physics.vy}`);
 }
 
 // Add these helper functions
 function isOnGround(piece) {
-    return piece.y + piece.attributes.radius >= CANVAS_HEIGHT;
+    return piece.physics.y + piece.physics.radius >= CANVAS_HEIGHT;
 }
 
 function isTouchingWalls(piece) {
-    return (piece.x - piece.attributes.radius <= LEFT_WALL.x + LEFT_WALL.width) ||
-           (piece.x + piece.attributes.radius >= RIGHT_WALL.x);
+    return (piece.physics.x - piece.physics.radius <= LEFT_WALL.x + LEFT_WALL.width) ||
+           (piece.physics.x + piece.physics.radius >= RIGHT_WALL.x);
 }
 
 // Handle collision and record the collision force
 function handleCollision(piece1, piece2) {
-    const dx = piece2.x - piece1.x;
-    const dy = piece2.y - piece1.y;
+    const dx = piece2.physics.x - piece1.physics.x;
+    const dy = piece2.physics.y - piece1.physics.y;
     const distance = Math.hypot(dx, dy);
     const error_margin = 0.1;
 
-    const min_distance = piece1.attributes.radius + piece2.attributes.radius + error_margin;
+    const min_distance = piece1.physics.radius + piece2.physics.radius + error_margin;
 
     if (distance < min_distance) {
         // Collision detected
@@ -87,14 +85,14 @@ function handleCollision(piece1, piece2) {
         const ty = nx;
 
         // Dot product of velocity and normal/tangential vectors
-        const v1n = piece1.vx * nx + piece1.vy * ny;
-        const v1t = piece1.vx * tx + piece1.vy * ty;
-        const v2n = piece2.vx * nx + piece2.vy * ny;
-        const v2t = piece2.vx * tx + piece2.vy * ty;
+        const v1n = piece1.physics.vx * nx + piece1.physics.vy * ny;
+        const v1t = piece1.physics.vx * tx + piece1.physics.vy * ty;
+        const v2n = piece2.physics.vx * nx + piece2.physics.vy * ny;
+        const v2t = piece2.physics.vx * tx + piece2.physics.vy * ty;
 
         // Masses
-        const m1 = piece1.attributes.mass;
-        const m2 = piece2.attributes.mass;
+        const m1 = piece1.physics.mass;
+        const m2 = piece2.physics.mass;
 
         // Bounce factors
         const bounce1 = piece1.attributes.bounceFactor || BOUNCE_FACTOR;
@@ -109,20 +107,20 @@ function handleCollision(piece1, piece2) {
         const v2tAfter = v2t;
 
         // Convert scalar normal and tangential velocities into vectors
-        piece1.vx = v1nAfter * nx + v1tAfter * tx;
-        piece1.vy = v1nAfter * ny + v1tAfter * ty;
-        piece2.vx = v2nAfter * nx + v2tAfter * tx;
-        piece2.vy = v2nAfter * ny + v2tAfter * ty;
+        piece1.physics.vx = v1nAfter * nx + v1tAfter * tx;
+        piece1.physics.vy = v1nAfter * ny + v1tAfter * ty;
+        piece2.physics.vx = v2nAfter * nx + v2tAfter * tx;
+        piece2.physics.vy = v2nAfter * ny + v2tAfter * ty;
 
         // Move pieces apart to prevent sticking
         const overlap = min_distance - distance;
         const correctionX = (overlap / (m1 + m2)) * nx;
         const correctionY = (overlap / (m1 + m2)) * ny;
 
-        piece1.x -= correctionX * m2;
-        piece1.y -= correctionY * m2;
-        piece2.x += correctionX * m1;
-        piece2.y += correctionY * m1;
+        piece1.physics.x -= correctionX * m2;
+        piece1.physics.y -= correctionY * m2;
+        piece2.physics.x += correctionX * m1;
+        piece2.physics.y += correctionY * m1;
 
         // After resolving collision, check for merging
         checkMerge(gameState.pieces);
@@ -147,63 +145,63 @@ export function handleAllCollisions() {
 }
 
 function calculateFinalVelocity(piece1, piece2, v1, v2) {
-    return (v1 * (piece1.attributes.mass - piece2.attributes.mass) + 2 * piece2.attributes.mass * v2) / (piece1.attributes.mass + piece2.attributes.mass);
+    return (v1 * (piece1.physics.mass - piece2.physics.mass) + 2 * piece2.physics.mass * v2) / (piece1.physics.mass + piece2.physics.mass);
 }
 
 export function updateVelocity(piece, deltaTime) {
-    const totalForceX = piece.forces.reduce((sum, force) => sum + force.x, 0);
-    const totalForceY = piece.forces.reduce((sum, force) => sum + force.y, 0);
+    const totalForceX = piece.physics.forces.reduce((sum, force) => sum + force.x, 0);
+    const totalForceY = piece.physics.forces.reduce((sum, force) => sum + force.y, 0);
 
-    piece.vx += (totalForceX / piece.attributes.mass) * deltaTime;
-    piece.vy += (totalForceY / piece.attributes.mass) * deltaTime;
+    piece.physics.vx += (totalForceX / piece.physics.mass) * deltaTime;
+    piece.physics.vy += (totalForceY / piece.physics.mass) * deltaTime;
 }
 
 export function updatePosition(piece, deltaTime) {
-    piece.x += piece.vx * deltaTime;
-    piece.y += piece.vy * deltaTime;
+    piece.physics.x += piece.physics.vx * deltaTime;
+    piece.physics.y += piece.physics.vy * deltaTime;
 
     // Check if the piece is at rest
-    const speedSquared = piece.vx * piece.vx + piece.vy * piece.vy;
+    const speedSquared = piece.physics.vx * piece.physics.vx + piece.physics.vy * piece.physics.vy;
     if (speedSquared < VELOCITY_THRESHOLD * VELOCITY_THRESHOLD) {
-        piece.isAtRest = true;
+        piece.physics.isAtRest = true;
     } else {
-        piece.isAtRest = false;
+        piece.physics.isAtRest = false;
     }
     // console.log(`Piece ${piece.name} is at rest: ${piece.isAtRest}`);
 
     // Apply ground friction if the piece is on the ground
     if (isOnGround(piece)) {
-        piece.y = CANVAS_HEIGHT - piece.attributes.radius; // Ensure the piece doesn't sink into the ground
-        piece.vy = 0; // Stop vertical movement
-        piece.vx *= GROUND_FRICTION; // Apply ground friction to horizontal movement
+        piece.physics.y = CANVAS_HEIGHT - piece.physics.radius; // Ensure the piece doesn't sink into the ground
+        piece.physics.vy = 0; // Stop vertical movement
+        piece.physics.vx *= GROUND_FRICTION; // Apply ground friction to horizontal movement
     }
 
     // Apply wall friction if the piece is touching the walls
     if (isTouchingWalls(piece)) {
-        if (piece.x - piece.attributes.radius <= LEFT_WALL.x + LEFT_WALL.width) {
-            piece.x = LEFT_WALL.x + LEFT_WALL.width + piece.attributes.radius;
-        } else if (piece.x + piece.attributes.radius >= RIGHT_WALL.x) {
-            piece.x = RIGHT_WALL.x - piece.attributes.radius;
+        if (piece.physics.x - piece.physics.radius <= LEFT_WALL.x + LEFT_WALL.width) {
+            piece.physics.x = LEFT_WALL.x + LEFT_WALL.width + piece.physics.radius;
+        } else if (piece.physics.x + piece.physics.radius >= RIGHT_WALL.x) {
+            piece.physics.x = RIGHT_WALL.x - piece.physics.radius;
         }
-        piece.vx *= GROUND_FRICTION; // Apply ground friction to horizontal movement
+        piece.physics.vx *= GROUND_FRICTION; // Apply ground friction to horizontal movement
     }
 }
 
 
 export function updateRotation(piece, deltaTime) {
-    piece.rotation += piece.angularVelocity * deltaTime;
-    piece.rotation %= Math.PI * 2;
+    piece.visual.rotation += piece.visual.angularVelocity * deltaTime;
+    piece.visual.rotation %= Math.PI * 2;
 
-    const speed = Math.hypot(piece.vx, piece.vy);
+    const speed = Math.hypot(piece.physics.vx, piece.physics.vy);
     if (speed > SPEED_THRESHOLD) {
-        piece.angularVelocity *= ROTATION_FRICTION;
-        if (Math.abs(piece.angularVelocity) < ANGULAR_VELOCITY_THRESHOLD) {
-            piece.angularVelocity = 0;
+        piece.visual.angularVelocity *= ROTATION_FRICTION;
+        if (Math.abs(piece.visual.angularVelocity) < ANGULAR_VELOCITY_THRESHOLD) {
+            piece.visual.angularVelocity = 0;
         }
     } else {
-        piece.angularVelocity *= ROTATION_FRICTION;
-        if (Math.abs(piece.angularVelocity) < ANGULAR_VELOCITY_THRESHOLD) {
-            piece.angularVelocity = 0;
+        piece.visual.angularVelocity *= ROTATION_FRICTION;
+        if (Math.abs(piece.visual.angularVelocity) < ANGULAR_VELOCITY_THRESHOLD) {
+            piece.visual.angularVelocity = 0;
         }
     }
 }
@@ -213,21 +211,21 @@ export function handleWallCollisions(piece, LEFT_WALL, RIGHT_WALL) {
     const bounceFactor = piece.attributes.bounceFactor || BOUNCE_FACTOR;
 
     // Left wall collision
-    if (piece.x - piece.attributes.radius < LEFT_WALL.x + LEFT_WALL.width) {
-        piece.x = LEFT_WALL.x + LEFT_WALL.width + piece.attributes.radius;
-        piece.vx = -piece.vx * bounceFactor;
+    if (piece.physics.x - piece.physics.radius < LEFT_WALL.x + LEFT_WALL.width) {
+        piece.physics.x = LEFT_WALL.x + LEFT_WALL.width + piece.physics.radius;
+        piece.physics.vx = -piece.physics.vx * bounceFactor;
     }
 
     // Right wall collision
-    if (piece.x + piece.attributes.radius > RIGHT_WALL.x) {
-        piece.x = RIGHT_WALL.x - piece.attributes.radius;
-        piece.vx = -piece.vx * bounceFactor;
+    if (piece.physics.x + piece.physics.radius > RIGHT_WALL.x) {
+        piece.physics.x = RIGHT_WALL.x - piece.physics.radius;
+        piece.physics.vx = -piece.physics.vx * bounceFactor;
     }
 
-    // Bottom collision (if needed)
-    if (piece.y + piece.attributes.radius > CANVAS_HEIGHT) {
-        piece.y = CANVAS_HEIGHT - piece.attributes.radius;
-        piece.vy = -piece.vy * bounceFactor;
+    // Bottom collision
+    if (piece.physics.y + piece.physics.radius > CANVAS_HEIGHT) {
+        piece.physics.y = CANVAS_HEIGHT - piece.physics.radius;
+        piece.physics.vy = -piece.physics.vy * bounceFactor;
     }
 }
 
@@ -242,11 +240,11 @@ export function checkMerge(pieces) {
                 continue;
             }
 
-            const dx = piece1.x - piece2.x;
-            const dy = piece1.y - piece2.y;
+            const dx = piece1.physics.x - piece2.physics.x;
+            const dy = piece1.physics.y - piece2.physics.y;
             const distance = Math.sqrt(dx * dx + dy * dy);
             const error_margin = 1;
-            if (distance <= piece1.attributes.radius + piece2.attributes.radius + error_margin) {
+            if (distance <= piece1.physics.radius + piece2.physics.radius + error_margin) {
                 if (areMergeable(piece1, piece2)) {
                     // Check for special abilities that don't result in evolution
                     if (hasSpecialMergeAbility(piece1, piece2)) {
@@ -346,11 +344,11 @@ export  function isFruit(piece) {
 
 // Updated function to handle fruit eating with optimized collision detection
 export function eatFruit(animal, fruit) {
-    const dx = animal.x - fruit.x;
-    const dy = animal.y - fruit.y;
+    const dx = animal.physics.x - fruit.physics.x;
+    const dy = animal.physics.y - fruit.physics.y;
     const distanceSquared = dx * dx + dy * dy;
     console.log(`Distance squared: ${distanceSquared}`);
-    const contactThreshold = (animal.attributes.radius + fruit.attributes.radius) ** 2;
+    const contactThreshold = (animal.physics.radius + fruit.physics.radius) ** 2;
     console.log(`Contact threshold: ${contactThreshold}`);
 
     if (distanceSquared <= contactThreshold) {
@@ -362,7 +360,7 @@ export function eatFruit(animal, fruit) {
         playSound(mergeSound);
         
         // Create and animate the score sprite
-        createScoreSprite(fruit.x, fruit.y, scoreIncrease);
+        createScoreSprite(fruit.physics.x, fruit.physics.y, scoreIncrease);
     } else {
         console.log(`${animal.name} is not in contact with ${fruit.name}, cannot eat it.`);
     }

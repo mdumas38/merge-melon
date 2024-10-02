@@ -1,14 +1,15 @@
 // config.js
 
 // Canvas dimensions
-export const CANVAS_WIDTH = 900; // Adjust as needed
-export const CANVAS_HEIGHT = 900; // Adjust as needed
+export const CANVAS_WIDTH = 1440; // Increased from 900
+export const CANVAS_HEIGHT = 900; // Kept the same
+export const GAME_AREA_WIDTH = 900; // New constant for the actual game area
 
 // Game physics constants
 export const GRAVITY = 980; // pixels per second squared
 export const FRICTION = 0.985;
 export const BOUNCE_FACTOR = 0.2;
-export const SPAWN_Y = 100;
+export const SPAWN_Y = 150;
 export const MAX_VELOCITY = 2000;
 export const POWER_MULTIPLIER = 1;
 export const POWER_SCALING_FACTOR = 30;
@@ -19,11 +20,12 @@ export const VELOCITY_THRESHOLD = 50;
 export const END_ROUND_COOLDOWN = 3000;
 export const THROW_COOLDOWN = 500;
 export const TORQUE_FACTOR = 0.0015; // Adjust for more realistic rotation
-export const CONTAINER_WIDTH = 300;
-export const CONTAINER_HEIGHT = 600;
+export const CONTAINER_WIDTH = 600;
+export const CONTAINER_HEIGHT = 700; // Stretch to the bottom
 export const SHOP_SIZE = 40; // Adjust based on how large you want characters in the shop
-export const SHOP_ITEMS = 3;
+export const SHOP_ITEMS = 4;
 export const GRAVITY_MULTIPLIER = 1.5; // Gravity multiplier when Saturn is present
+export const EXCLUDED_PIECES = ["Asteroid", "Pineapple", "Jupiter", "Elephant"];
 
 
 export const INITIAL_DECK_VALUES = [0, 0, 1, 1, 2, 2];
@@ -47,7 +49,7 @@ export const CHARACTER_FAMILIES = {
                 tier: 1,
                 abilities: ["Combine into a Mouse (1 point)", "Disappear into apples (1 point)"],
                 attributes: {
-                    radius: 15,
+                    radius: 22.5, // Decreased by 25%
                     color: "#FF0000",
                     value: 1,
                     mass: 2,
@@ -63,7 +65,7 @@ export const CHARACTER_FAMILIES = {
                 tier: 2,
                 abilities: ["Combine into a Cat (3 points)", "Eat Cherry (1 point)", "Eat Fruit"],
                 attributes: {
-                    radius: 20,
+                    radius: 30, // Decreased by 25%
                     color: "#808080",
                     value: 3,
                     mass: 3,
@@ -79,7 +81,7 @@ export const CHARACTER_FAMILIES = {
                 tier: 3,
                 abilities: ["Combine into a Dog (6 points)", "Eat Strawberry (3 points)", "Eat Fruit"],
                 attributes: {
-                    radius: 25,
+                    radius: 37.5, // Decreased by 25%
                     color: "#FFA500",
                     value: 6,
                     mass: 4,
@@ -95,7 +97,7 @@ export const CHARACTER_FAMILIES = {
                 tier: 4,
                 abilities: ["Combine into a Bear (12 points)", "Eat apple (20 points)", "Eat Fruit"],
                 attributes: {
-                    radius: 30,
+                    radius: 45, // Decreased by 25%
                     color: "#8B4513",
                     value: 12,
                     mass: 5,
@@ -111,7 +113,7 @@ export const CHARACTER_FAMILIES = {
                 tier: 5,
                 abilities: ["Combine into an Elephant (25 points)", "Eat Pineapple (50 points)", "Eat Fruit"],
                 attributes: {
-                    radius: 35,
+                    radius: 52.5, // Decreased by 25%
                     color: "#8B4513",
                     value: 25,
                     mass: 7,
@@ -127,7 +129,7 @@ export const CHARACTER_FAMILIES = {
                 tier: 6,
                 abilities: ["Combine into a Whale (50 points)", "Eat watermelon (150 points)", "Eat Fruit"],
                 attributes: {
-                    radius: 40,
+                    radius: 60, // Decreased by 25%
                     color: "#808080",
                     value: 50,
                     mass: 10,
@@ -138,98 +140,98 @@ export const CHARACTER_FAMILIES = {
             }
         ]
     },
-    tech_storage: {
-        description: "Storage-based items with high points. Cannot combine, instead needs a certain amount to generate better storage.",
-        evolutionChain: [
-            { name: "Floppy Disk", value: 1 },
-            { name: "Tape", value: 6 },
-            { name: "VHS", value: 11 },
-            { name: "Vinyl", value: 27 },
-            { name: "DVD", value: 59 }
-        ],
-        characters: [
-            {
-                name: "Floppy Disk",
-                faceImage: "/static/images/characters/family/tech_storage/floppy/floppy_face.png",
-                bodyImage: "/static/images/characters/family/tech_storage/floppy/floppy.png",
-                tier: 1,
-                abilities: ["Cannot Combine", "Need 4 to generate a Tape (6 points)"],
-                attributes: {
-                    radius: 15,
-                    color: "#000000",
-                    value: 1,
-                    mass: 1,
-                    angularVelocity: 1,
-                    cost: 1
-                },
-                family: "tech_storage"
-            },
-            {
-                name: "Tape",
-                faceImage: "/static/images/characters/family/tech_storage/tape/tape_face.png",
-                bodyImage: "/static/images/characters/family/tech_storage/tape/tape.png",
-                tier: 2,
-                abilities: ["Cannot Combine", "Need 3 to generate a VHS (11 points)"],
-                attributes: {
-                    radius: 20,
-                    color: "#8B4513",
-                    value: 6,
-                    mass: 2,
-                    angularVelocity: 1,
-                    cost: 2
-                },
-                family: "tech_storage"
-            },
-            {
-                name: "VHS",
-                faceImage: "/static/images/characters/family/tech_storage/vhs/vhs_face.png",
-                bodyImage: "/static/images/characters/family/tech_storage/vhs/vhs.png",
-                tier: 3,
-                abilities: ["Cannot Combine", "Need 3 to generate a Vinyl (27 points)"],
-                attributes: {
-                    radius: 25,
-                    color: "#000000",
-                    value: 11,
-                    mass: 3,
-                    angularVelocity: 1,
-                    cost: 5
-                },
-                family: "tech_storage"
-            },
-            {
-                name: "Vinyl",
-                faceImage: "/static/images/characters/family/tech_storage/vinyl/vinyl_face.png",
-                bodyImage: "/static/images/characters/family/tech_storage/vinyl/vinyl.png",
-                tier: 4,
-                abilities: ["Cannot Combine", "Need 3 to generate a DVD (59 points)"],
-                attributes: {
-                    radius: 30,
-                    color: "#000000",
-                    value: 27,
-                    mass: 4,
-                    angularVelocity: 1,
-                    cost: 7
-                },
-                family: "tech_storage"
-            },
-            {
-                name: "DVD",
-                faceImage: "/static/images/characters/family/tech_storage/dvd/dvd_face.png",
-                bodyImage: "/static/images/characters/family/tech_storage/dvd/dvd.png",
-                tier: 5,
-                abilities: ["Cannot Combine", "Need 3 to generate a USB (111 points)"],
-                attributes: {
-                    radius: 35,
-                    color: "#C0C0C0",
-                    value: 59,
-                    mass: 5,
-                    angularVelocity: 1,
-                    cost: 10
-                },
-                family: "tech_storage"
-            }
-        ]
-    },
+    // tech_storage: {
+    //     description: "Storage-based items with high points. Cannot combine, instead needs a certain amount to generate better storage.",
+    //     evolutionChain: [
+    //         { name: "Floppy Disk", value: 1 },
+    //         { name: "Tape", value: 6 },
+    //         { name: "VHS", value: 11 },
+    //         { name: "Vinyl", value: 27 },
+    //         { name: "DVD", value: 59 }
+    //     ],
+    //     characters: [
+    //         {
+    //             name: "Floppy Disk",
+    //             faceImage: "/static/images/characters/family/tech_storage/floppy/floppy_face.png",
+    //             bodyImage: "/static/images/characters/family/tech_storage/floppy/floppy.png",
+    //             tier: 1,
+    //             abilities: ["Cannot Combine", "Need 4 to generate a Tape (6 points)"],
+    //             attributes: {
+    //                 radius: 15,
+    //                 color: "#000000",
+    //                 value: 1,
+    //                 mass: 1,
+    //                 angularVelocity: 1,
+    //                 cost: 1
+    //             },
+    //             family: "tech_storage"
+    //         },
+    //         {
+    //             name: "Tape",
+    //             faceImage: "/static/images/characters/family/tech_storage/tape/tape_face.png",
+    //             bodyImage: "/static/images/characters/family/tech_storage/tape/tape.png",
+    //             tier: 2,
+    //             abilities: ["Cannot Combine", "Need 3 to generate a VHS (11 points)"],
+    //             attributes: {
+    //                 radius: 20,
+    //                 color: "#8B4513",
+    //                 value: 6,
+    //                 mass: 2,
+    //                 angularVelocity: 1,
+    //                 cost: 2
+    //             },
+    //             family: "tech_storage"
+    //         },
+    //         {
+    //             name: "VHS",
+    //             faceImage: "/static/images/characters/family/tech_storage/vhs/vhs_face.png",
+    //             bodyImage: "/static/images/characters/family/tech_storage/vhs/vhs.png",
+    //             tier: 3,
+    //             abilities: ["Cannot Combine", "Need 3 to generate a Vinyl (27 points)"],
+    //             attributes: {
+    //                 radius: 25,
+    //                 color: "#000000",
+    //                 value: 11,
+    //                 mass: 3,
+    //                 angularVelocity: 1,
+    //                 cost: 5
+    //             },
+    //             family: "tech_storage"
+    //         },
+    //         {
+    //             name: "Vinyl",
+    //             faceImage: "/static/images/characters/family/tech_storage/vinyl/vinyl_face.png",
+    //             bodyImage: "/static/images/characters/family/tech_storage/vinyl/vinyl.png",
+    //             tier: 4,
+    //             abilities: ["Cannot Combine", "Need 3 to generate a DVD (59 points)"],
+    //             attributes: {
+    //                 radius: 30,
+    //                 color: "#000000",
+    //                 value: 27,
+    //                 mass: 4,
+    //                 angularVelocity: 1,
+    //                 cost: 7
+    //             },
+    //             family: "tech_storage"
+    //         },
+    //         {
+    //             name: "DVD",
+    //             faceImage: "/static/images/characters/family/tech_storage/dvd/dvd_face.png",
+    //             bodyImage: "/static/images/characters/family/tech_storage/dvd/dvd.png",
+    //             tier: 5,
+    //             abilities: ["Cannot Combine", "Need 3 to generate a USB (111 points)"],
+    //             attributes: {
+    //                 radius: 35,
+    //                 color: "#C0C0C0",
+    //                 value: 59,
+    //                 mass: 5,
+    //                 angularVelocity: 1,
+    //                 cost: 10
+    //             },
+    //             family: "tech_storage"
+    //         }
+    //     ]
+    // },
     fruits: {
         description: "Fruit-based items with medium points. High level fruits give deleters.",
         evolutionChain: [
@@ -339,10 +341,10 @@ export const CHARACTER_FAMILIES = {
                 tier: 1,
                 abilities: ["Combine into a Moon (3 points)", "Not a planet"],
                 attributes: {
-                    radius: 15,
+                    radius: 22.5, // Decreased by 25%
                     color: "#A9A9A9",
                     value: 1,
-                    mass: 2,
+                    mass: 4, // Multiplied by 2
                     angularVelocity: 1,
                     cost: 1
                 },
@@ -355,10 +357,10 @@ export const CHARACTER_FAMILIES = {
                 tier: 2,
                 abilities: ["Combine into Earth (7 points)", "When created generate 1-5 asteroids"],
                 attributes: {
-                    radius: 20,
+                    radius: 30, // Decreased by 25%
                     color: "#F0F0F0",
                     value: 3,
-                    mass: 3,
+                    mass: 6, // Multiplied by 2
                     angularVelocity: 1,
                     cost: 2
                 },
@@ -371,10 +373,10 @@ export const CHARACTER_FAMILIES = {
                 tier: 3,
                 abilities: ["Combine into Saturn (15 points)", "When created destroy all asteroids"],
                 attributes: {
-                    radius: 25,
+                    radius: 37.5, // Decreased by 25%
                     color: "#0000FF",
                     value: 7,
-                    mass: 5,
+                    mass: 10, // Multiplied by 2
                     angularVelocity: 1,
                     cost: 5
                 },
@@ -387,10 +389,10 @@ export const CHARACTER_FAMILIES = {
                 tier: 4,
                 abilities: ["Combine into Jupiter (30 points)", "While a Saturn is in place, gravity becomes heavier"],
                 attributes: {
-                    radius: 35,
+                    radius: 52.5, // Decreased by 25%
                     color: "#FFA500",
                     value: 15,
-                    mass: 8,
+                    mass: 16, // Multiplied by 2
                     angularVelocity: 1,
                     cost: 7
                 },
@@ -403,10 +405,10 @@ export const CHARACTER_FAMILIES = {
                 tier: 5,
                 abilities: ["Combine into a Sun (70 points)", "Extra Bouncy"],
                 attributes: {
-                    radius: 45,
+                    radius: 67.5, // Decreased by 25%
                     color: "#FFA07A",
                     value: 30,
-                    mass: 12,
+                    mass: 24, // Multiplied by 2
                     angularVelocity: 1,
                     cost: 10,
                     bounceFactor: 0.5
@@ -420,11 +422,11 @@ export const CHARACTER_FAMILIES = {
                 tier: 0,
                 abilities: ["Cannot be combined", "No effect"],
                 attributes: {
-                    radius: 20,
+                    radius: 20, // Decreased by 25%
                     color: "#808080",
-                    value: 0,
-                    mass: 1,
-                    angularVelocity: 1,
+                    value: 10,
+                    mass: 2, // Multiplied by 2
+                    angularVelocity: 1, 
                     cost: 0
                 },
                 family: "celestials"
@@ -441,7 +443,7 @@ export const ALL_PIECE_TYPES = [
 ];
 // Container configurations
 export const CONTAINER = {
-    x: CANVAS_WIDTH / 2 - CONTAINER_WIDTH / 2,
+    x: (CANVAS_WIDTH - CONTAINER_WIDTH) / 2,
     y: 0, // Start from the top of the screen
     width: CONTAINER_WIDTH,
     height: CANVAS_HEIGHT, // Stretch to the bottom of the screen
@@ -451,16 +453,37 @@ export const CONTAINER = {
 
 // Add configurations for left and right walls
 export const LEFT_WALL = {
-    x: CONTAINER.x,
+    x: (CANVAS_WIDTH - CONTAINER_WIDTH) / 2,
     y: 0,
     width: CONTAINER.lineWidth,
     height: CANVAS_HEIGHT
 };
 
 export const RIGHT_WALL = {
-    x: CONTAINER.x + CONTAINER.width - CONTAINER.lineWidth,
+    x: (CANVAS_WIDTH + CONTAINER_WIDTH) / 2 - CONTAINER.lineWidth,
     y: 0,
     width: CONTAINER.lineWidth,
     height: CANVAS_HEIGHT
 };
 
+// Array of game tips
+export const GAME_TIPS = [
+    "Tip: Merge similar pieces to create more powerful characters!",
+    "Tip: Keep an eye on your gold - use it wisely in the shop!",
+    "Tip: Higher-level characters are worth more points!",
+    // "Tip: Try to create combos by merging multiple pieces at once!",
+    // "Tip: Don't forget to use your special abilities!",
+    // "Tip: Planning your merges can lead to big point bonuses!",
+    "Tip: Frozen shop items will be available in the next round!",
+    "Tip: Rerolling the shop might give you better options!",
+    "Tip: Some characters have unique synergies - experiment!",
+    // "Tip: Balancing your deck is key to success!",
+    "Tip: To sell a piece, click and drag it to the shop. All pieces can be sold for 1 gold.",
+    "Tip: You can reroll the shop for 1 gold to see what's available.",
+    "Tip: Buy a piece by dragging it into your deck.",
+    "Tip: You can sell a piece by dragging it into the shop.",
+    "Tip: If you don't like the shop, you can reroll it for 1 gold.",
+    "Tip: If you don't reach the target score on any round, you lose.",
+    "Tip: If a piece falls out of the container, you lose a life.",
+    "Tip: You start with 3 lives. Lose them all and it's game over!",
+];

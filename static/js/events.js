@@ -47,7 +47,8 @@ export function attachEventListeners(callbacks) {
 
     if (gameState.restartButton) {
         gameState.restartButton.addEventListener('click', () => {
-            restartGame();
+            restartGame
+            ();
             console.log("Restarting game...");
             gameOverDiv.classList.add('hidden');
             initGame();

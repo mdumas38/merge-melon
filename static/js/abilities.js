@@ -3,6 +3,7 @@ import { updateScore } from './ui.js';
 import { playSound, mergeSound } from './audio.js';
 import { createPiece } from './piece.js';
 import { isFruit, canEatFruit, eatFruit } from './physics.js';
+import { ALL_PIECE_TYPES, LEFT_WALL, RIGHT_WALL } from './config.js';
 
 // Add this new function to create and animate the score sprite
 export function createScoreSprite(x, y, value) {
@@ -15,8 +16,11 @@ export function createScoreSprite(x, y, value) {
     sprite.className = 'score-sprite';
     sprite.textContent = `+${value}`;
     
+    // Adjust x position to avoid overlap
+    const adjustedX = adjustSpritePosition(x);
+    
     // Calculate position relative to the game container
-    const relativeX = x - 50;
+    const relativeX = adjustedX - 50;
     const relativeY = y - 100;
     
     sprite.style.left = `${relativeX}px`;
@@ -24,6 +28,9 @@ export function createScoreSprite(x, y, value) {
     
     gameContainer.appendChild(sprite);
     console.log(`Score sprite appended to game container at relative position (${relativeX}, ${relativeY})`);
+
+    // Add this position to recent sprite positions
+    gameState.recentSpritePositions.push({ x: adjustedX, time: Date.now() });
 
     // Animate the sprite
     let opacity = 1;
@@ -48,6 +55,25 @@ export function createScoreSprite(x, y, value) {
     console.log('Score sprite animation started');
 }
 
+function adjustSpritePosition(x) {
+    const currentTime = Date.now();
+    const recentPositions = gameState.recentSpritePositions.filter(pos => currentTime - pos.time < 1000);
+    
+    let adjustedX = x;
+    const minDistance = 100; // Minimum distance between sprites
+
+    for (const pos of recentPositions) {
+        if (Math.abs(adjustedX - pos.x) < minDistance) {
+            adjustedX = pos.x + minDistance;
+        }
+    }
+
+    // Clean up old positions
+    gameState.recentSpritePositions = recentPositions;
+
+    return adjustedX;
+}
+
 // Add the startMergeAnimation function to handle merging of pieces
 export function startMergeAnimation(existingPiece, releasedPiece, newPieceType) {
     // console.log(`Starting merge animation: ${existingPiece.name} + ${releasedPiece.name} -> ${newPieceType.name}`);
@@ -56,32 +82,40 @@ export function startMergeAnimation(existingPiece, releasedPiece, newPieceType) 
     existingPiece.merging = true;
     releasedPiece.merging = true;
 
-    // Create the new merged piece at the average position of the two
+    // Create the new merged piece at the location of the second piece (releasedPiece)
     const mergedPiece = createPiece(newPieceType);
-    mergedPiece.x = (existingPiece.x + releasedPiece.x) / 2;
-    mergedPiece.y = (existingPiece.y + releasedPiece.y) / 2;
+    mergedPiece.physics.x = existingPiece.physics.x;
+    mergedPiece.physics.y = existingPiece.physics.y;
+    mergedPiece.physics.vx = existingPiece.physics.vx;
+    mergedPiece.physics.vy = existingPiece.physics.vy;
 
-    // Handle "Roar" ability for the Lion
-    if (mergedPiece.abilities && mergedPiece.abilities.includes("Roar") && mergedPiece.name === "Lion") {
-        const smallAnimals = ["Ladybug", "Mouse", "Bird", "Rabbit", "Fox"];
-        let removedAnimals = gameState.pieces.filter(piece => smallAnimals.includes(piece.name));
-        let totalValueRemoved = 0;
-
-        removedAnimals.forEach(animal => {
-            totalValueRemoved += animal.attributes.value;
-            console.log(`Lion's roar removed a ${animal.name}! Value: ${animal.attributes.value}.`);
-        });
-
-        // Remove small animals from the game
-        gameState.pieces = gameState.pieces.filter(piece => !smallAnimals.includes(piece.name));
-
-        // Add the total value to the player's score
-        gameState.score += totalValueRemoved;
-        updateScore();
-
-        console.log(`Lion's roar removed ${removedAnimals.length} small animals! Total score increase: ${totalValueRemoved}.`);
-        playSound(mergeSound); // Play a sound effect for roaring (you might want to create a specific roar sound)
+    // Check if the new piece is a Moon and spawn asteroids
+    if (mergedPiece.name === "Moon") {
+        console.log("Moon created, spawning asteroids");
+        spawnAsteroids();
     }
+
+    // // Handle "Roar" ability for the Lion
+    // if (mergedPiece.abilities && mergedPiece.abilities.includes("Roar") && mergedPiece.name === "Lion") {
+    //     const smallAnimals = ["Ladybug", "Mouse", "Bird", "Rabbit", "Fox"];
+    //     let removedAnimals = gameState.pieces.filter(piece => smallAnimals.includes(piece.name));
+    //     let totalValueRemoved = 0;
+
+    //     removedAnimals.forEach(animal => {
+    //         totalValueRemoved += animal.attributes.value;
+    //         console.log(`Lion's roar removed a ${animal.name}! Value: ${animal.attributes.value}.`);
+    //     });
+
+    //     // Remove small animals from the game
+    //     gameState.pieces = gameState.pieces.filter(piece => !smallAnimals.includes(piece.name));
+
+    //     // Add the total value to the player's score
+    //     gameState.score += totalValueRemoved;
+    //     updateScore();
+
+    //     console.log(`Lion's roar removed ${removedAnimals.length} small animals! Total score increase: ${totalValueRemoved}.`);
+    //     playSound(mergeSound); // Play a sound effect for roaring (you might want to create a specific roar sound)
+    // }
 
     // // Handle "Eat Two Prey" ability for the Wolf
     // if (mergedPiece.abilities && mergedPiece.abilities.includes("Eat Two Prey") && mergedPiece.name === "Wolf") {
@@ -244,10 +278,9 @@ export function startMergeAnimation(existingPiece, releasedPiece, newPieceType) 
         updateScore();
 
         // Create and animate the score sprite
-        createScoreSprite(mergedPiece.x, mergedPiece.y, scoreIncrease);
+        createScoreSprite(mergedPiece.physics.x, mergedPiece.physics.y, scoreIncrease);
         
-
-    }, 0); // Adjust the delay as needed for animations
+    }, 25); // Adjust the delay as needed for animations
 
     playSound(mergeSound);
 }
@@ -297,4 +330,26 @@ function checkCollision(piece1, piece2) {
 
     // Check for overlap
     return !(left1 > right2 || right1 < left2 || top1 > bottom2 || bottom1 < top2);
+}
+
+// Add this function to the abilities.js file
+function spawnAsteroids() {
+    const asteroidType = ALL_PIECE_TYPES.find(type => type.name === "Asteroid");
+    if (!asteroidType) {
+        console.error("Asteroid piece type not found");
+        return;
+    }
+
+    const numAsteroids = Math.floor(Math.random() * 5) + 1; // Random number between 1 and 5
+    const minX = LEFT_WALL.x + LEFT_WALL.width + asteroidType.attributes.radius;
+    const maxX = RIGHT_WALL.x - asteroidType.attributes.radius;
+
+    for (let i = 0; i < numAsteroids; i++) {
+        const asteroid = createPiece(asteroidType);
+        asteroid.physics.x = Math.random() * (maxX - minX) + minX;
+        asteroid.physics.y = 0; // Start at the top of the screen
+        gameState.pieces.push(asteroid);
+    }
+
+    console.log(`Spawned ${numAsteroids} asteroids`);
 }

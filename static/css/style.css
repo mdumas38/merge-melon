@@ -10,36 +10,37 @@ body {
 }
 
 #game-container {
-    width: var(--canvas-width); /* Updated width to match CANVAS_WIDTH */
-    height: var(--canvas-height); /* Updated height to match CANVAS_HEIGHT */
-    position: relative; /* Ensures child elements are positioned relative to this container */
-    background-image: url('/static/images/game-background.png'); /* Ensure this image scales correctly */
+    width: var(--canvas-width);
+    height: var(--canvas-height);
+    position: relative;
+    background-image: url('/static/images/game-background.png');
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
-    border-radius: 15px; /* Rounded corners for the game container */
-    overflow: hidden; /* Ensures child elements don't overflow the rounded corners */
-    border: 5px solid #FFD700; /* Added a gold border for a professional look */
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Added a subtle box shadow for depth */
+    border-radius: 15px;
+    overflow: visible; /* Allow the container to display overflow for 3D effect */
+    border: 5px solid #FFD700;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    background-color: rgba(0, 0, 0, 0); /* Make sure background is transparent */
 }
 
 #game-canvas {
     border: 1px solid #353434;
-    border-radius: 15px; /* Rounded corners for canvases */
+    border-radius: 15px;
 }
 
 /* Improved layout and styling for game information display */
 #game-info {
     display: flex;
-    justify-content: space-around; /* Evenly distribute space around items */
-    align-items: center; /* Vertically center items */
-    padding: 15px 20px; /* Increased padding for better spacing */
-    background-color: rgba(0, 0, 0, 0.8); /* Darker background for contrast */
-    color: #FFD700; /* Gold color for a premium look */
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Professional font */
-    font-size: 20px; /* Increased font size for readability */
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* Subtle shadow for depth */
-    border-radius: 10px; /* Rounded corners */
+    justify-content: space-around;
+    align-items: center;
+    padding: 15px 20px;
+    background-color: rgba(0, 0, 0, 0.8);
+    color: #FFD700;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    border-radius: 10px;
 }
 
 /* Styling for individual info containers */
@@ -47,7 +48,7 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    margin: 0 15px; /* Horizontal margin for spacing */
+    margin: 0 15px;
 }
 
 /* Labels styling */
@@ -56,24 +57,32 @@ body {
 #target-score-container .target-score-label,
 #lives .lives-label,
 #gold-container .score-label {
-    font-size: 16px; /* Slightly smaller for hierarchy */
-    color: #FFFFFF; /* White color for labels */
-    text-shadow: 1px 1px #000; /* Text shadow for readability */
-    margin-bottom: 5px; /* Space below labels */
+    font-size: 16px;
+    color: #FFFFFF;
+    text-shadow: 1px 1px #000;
+    margin-bottom: 5px;
 }
 
 /* Numbers styling */
-#score-container .score-number,
 #round-container .score-number,
 #target-score-container .target-score-number,
 #lives .score-number,
 #gold-container .score-number {
-    font-size: 28px; /* Larger size for emphasis */
+    font-size: 28px;
     font-weight: bold;
-    color: #FFD700; /* Gold color for numbers */
-    text-shadow: 2px 2px #000; /* Enhanced shadow for prominence */
-    animation: pulse 2s infinite; /* Subtle pulsing animation */
+    color: #FFD700;
+    text-shadow: 2px 2px #000;
+    animation: pulse 2s infinite;
 }
+
+#score-container .score-number {
+    font-size: 60px;
+    font-weight: bold;
+    color: #FFD700;
+    text-shadow: 2px 2px #000;
+    animation: pulse 2s infinite;
+}
+
 
 /* Pulse animation for emphasis */
 @keyframes pulse {
@@ -91,7 +100,7 @@ body {
     padding: 20px;
     border-radius: 10px;
     text-align: center;
-    border: 2px solid #FFD700; /* Added border and shadow */
+    border: 2px solid #FFD700;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
 }
 
@@ -130,13 +139,13 @@ body {
 
 /* Add styles for the bucket and lava */
 #bucket-container {
-    pointer-events: none; /* Allow clicks to pass through to the game canvas */
+    pointer-events: none;
     position: absolute;
     bottom: 0;
     left: 50%;
     transform: translateX(-50%);
-    width: 500px; /* Top width */
-    height: 700px; /* Height of the bucket */
+    width: 500px;
+    height: 700px;
 }
 
 #bucket-canvas {
@@ -147,7 +156,7 @@ body {
 /* Boundary styling */
 .boundary {
     position: absolute;
-    background-color: #2E8B57; /* Same as side boundaries in JS */
+    background-color: #2E8B57;
 }
 
 #gold-container {
@@ -158,34 +167,36 @@ body {
 #shop {
     position: absolute;
     top: 5%;
-    left: 5%;
-    transform: translate(0%, 0%); /* Centers the shop both horizontally and vertically */
-    width: 90%; /* 80% of the game container's width */
-    height: 85%; /* 80% of the game container's height */
-    max-width: 100%; /* Prevents the shop from exceeding the game container's width */
-    max-height: 100%; /* Prevents the shop from exceeding the game container's height */
+    left: 22.5%;
+    transform: translate(0%, 0%);
+    width: 55%;
+    height: 90%;
+    max-width: 100%;
+    max-height: 100%;
     background-color: rgba(0, 0, 0, 0.9);
     color: #fff;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    border: 2px solid #FFD700; /* Added border and shadow */
+    border: 2px solid #FFD700;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
-    border-radius: 10px; /* Optional: Rounds the corners for a smoother look */
-    overflow: auto; /* Allows scrolling if content exceeds the shop's size */
-    margin: 0; /* Removes any default margins that might cause offset */
-    padding: 0; /* Removes any default padding that might cause offset */
+    border-radius: 10px;
+    overflow: auto;
+    margin: 0;
+    padding: 0;
+    background: linear-gradient(45deg, #1a1a2e, #16213e, #0f3460, #950740, #c70039);
+    background-size: 400% 400%;
+    animation: gradientBG 30s ease infinite;
 }
 
 /* Updated shop title */
 #shop h2 {
     font-family: 'Press Start 2P', cursive;
     color: #FFD700;
-    font-size: 4em;
-    margin-bottom: 0px;
+    font-size: 3em;
+    margin-bottom: 5px;
     text-shadow: 2px 2px #000;
-
 }
 
 #shop-items-and-refresh {
@@ -197,21 +208,23 @@ body {
 #shop-items {
     flex-grow: 1;
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); /* Responsive grid layout */
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
     gap: 20px;
-    justify-items: left;
+    justify-items: center;
     margin-top: 10px;
     margin-bottom: 0px;
-    padding: 0 20px; /* Adds horizontal padding for spacing */
+    padding: 0 20px;
+    position: relative;
+    z-index: 2;
 }
 
 .shop-item {
     background-color: #444;
-    border: 2px solid #FFD700; /* Added gold border */
+    border: 2px solid #FFD700;
     border-radius: 10px;
     padding: 0px;
-    width: 90%; /* Makes the item responsive within the grid */
-    max-width: 90%; /* Prevents excessive width */
+    width: 90%;
+    max-width: 90%;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -220,7 +233,7 @@ body {
 
 .shop-item:hover {
     transform: scale(1.05);
-    box-shadow: 0 4px 12px rgba(255, 215, 0, 0.5); /* Added gold glow on hover */
+    box-shadow: 0 4px 12px rgba(255, 215, 0, 0.5);
 }
 
 .item-details {
@@ -293,8 +306,8 @@ body {
     top: 0;
     left: 0;
     width: 100%;
-    height: 20px; /* Matches LAVA_HEIGHT in JS */
-    background-color: #FF4500; /* Lava color */
+    height: 20px;
+    background-color: #FF4500;
 }
 
 .ball-container {
@@ -310,7 +323,7 @@ body {
     left: 20px;
     transform: translateY(-50%);
     text-align: center;
-    color: #FFD700; /* Gold color for visibility */
+    color: #FFD700;
     font-family: 'Press Start 2P', cursive;
 }
 
@@ -321,7 +334,7 @@ body {
 }
 
 .score-number {
-    font-size: 48px; /* Very large for emphasis */
+    font-size: 48px;
     font-weight: bold;
     animation: flash 1s infinite;
     text-shadow: 2px 2px #000;
@@ -334,48 +347,79 @@ body {
     100% { color: #FFD700; }
 }
 
-/* Updated Score and Target Score Display Styles */
+/* Updated Score, Target Score, Round, and Gold Display Styles */
 #score-target-display {
     position: absolute;
-    top: 5%; /* Moved higher up on the screen */
-    left: 20px;
-    transform: translateY(0); /* Removed translateY to prevent downward shift */
+    top: 15%;
+    left: 2.5%;
     text-align: left;
-    color: #FFFFFF; /* White color for visibility */
+    color: #FFFFFF;
     font-family: 'Press Start 2P', cursive;
     display: flex;
     flex-direction: column;
     align-items: flex-start;
+    background-color: rgba(0, 0, 0, 0.7);
+    padding: 15px;
+    border-radius: 10px;
+    min-width: 200px;
 }
 
-.target-score-label {
+.score-label, .target-score-label, .round-label, .lives-label {
     font-size: 20px;
-    margin-bottom: 5px;
+    margin-bottom: 10px;
     text-shadow: 2px 2px #000;
 }
 
-.target-score-number {
-    font-size: 24px; /* Smaller and more subdued */
-    font-weight: bold;
-    color: #FFFFFF; /* Keep it white */
-    font-family: Arial, sans-serif;
-    text-shadow: 1px 1px #000;
-    /* Removed flashing animation for target score */
+.gold-label {
+    display: flex;
+    align-items: center;
+    margin-bottom: 30px;
+    text-shadow: 2px 2px #000;
 }
 
-/* Flashy Animation for Score Number Only */
-@keyframes flash {
-    0% { color: #FFD700; }
-    50% { color: #FF4500; }
-    100% { color: #FFD700; }
+.gold-icon {
+    width: 24px;
+    height: 24px;
+    margin-right: 5px;
+}
+
+.gold-colon {
+    font-size: 20px;
+    color: #ffffff;
+    margin-right: 5px;
+}
+
+#gold {
+    font-size: 20px;
+    color: #ffffff;
+}
+
+.target-score-number, .round-number, .gold-number {
+    font-size: 20px;
+    font-weight: bold;
+    color: #FFD700;
+    text-shadow: 2px 2px #000;
+    margin-bottom: 10px;
+}
+
+.score-number {
+    font-size: 60px;
+    color: #FFD700;
+    text-shadow: 2px 2px #000;
+}
+
+/* Make Target Score Bigger */
+.target-score-number {
+    font-size: 28px;
+    color: #FF6347; /* Tomato red to make it stand out */
 }
 
 /* Enhanced button styles for a more polished appearance */
 button {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    font-size: 1em; /* Consistent font size */
-    color: #FFFFFF; /* White text for buttons */
-    text-transform: uppercase; /* Uppercase for consistency */
+    font-size: 1em;
+    color: #FFFFFF;
+    text-transform: uppercase;
     transition: transform 0.2s, background-color 0.2s;
 }
 
@@ -387,11 +431,8 @@ button:hover {
 
 /* Updated pause menu styling */
 #pause-menu {
-    /* Added border and shadow */
     border: 2px solid #FFD700;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
-    
-    /* Existing styles */
     position: absolute;
     top: 50%;
     left: 50%;
@@ -412,7 +453,7 @@ button:hover {
     }
 
     #score-container, #round-container, #target-score-container, #lives, #gold-container {
-        margin: 10px 0; /* Vertical margin for spacing */
+        margin: 10px 0;
     }
 
     #score-container .score-number,
@@ -420,7 +461,7 @@ button:hover {
     #target-score-container .target-score-number,
     #lives .score-number,
     #gold-container .score-number {
-        font-size: 24px; /* Adjusted font size for smaller screens */
+        font-size: 24px;
     }
 }
 
@@ -431,26 +472,32 @@ button:hover {
     left: 0;
     width: 100%;
     height: 100%;
-    background-image: url('/static/images/game-background.png'); /* Same background as the game */
-    background-size: cover;
+    background-image: url('/static/images/logo-color.png');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    color: #FFD700; /* Gold color for text */
-    font-family: 'Press Start 2P', cursive; /* Retro game font */
+    color: #FFD700;
+    font-family: 'Press Start 2P', cursive;
     animation: fadeIn 1s ease-in-out;
 }
 
 #start-menu .title {
     font-size: 48px;
     margin-bottom: 30px;
-    text-shadow: 2px 2px #000; /* Adds depth to the text */
+    text-shadow: 2px 2px #000;
 }
 
 #start-button {
+    position: absolute;
+    align-items: center;
+    bottom: 10%;
     padding: 15px 30px;
     font-size: 20px;
+    font-weight: bold;
     cursor: pointer;
     background-color: #4CAF50;
     color: white;
@@ -480,9 +527,10 @@ button:hover {
 /* Lives Display Styles */
 .lives-container {
     display: flex;
-    align-items: center;
+    align-items: center; /* Center align items vertically */
+    justify-content: center; /* Center align items horizontally */
     margin-top: 10px;
-    margin-bottom: 40px;
+    margin-bottom: 30px;
     position: relative;
     top: 5%;
 }
@@ -502,7 +550,7 @@ button:hover {
 }
 
 .heart {
-    width: 24px; /* Adjust size as needed */
+    width: 24px;
     height: 24px;
     margin-right: 0px;
 }
@@ -510,11 +558,11 @@ button:hover {
 #shop-content {
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
-    gap: 20px;
-    width: 95%;
+    align-items: center;
+    gap: 10px;
+    width: 90%;
     height: 80%;
-  }
+}
   
   #deck-container {
     flex: 1;
@@ -524,19 +572,20 @@ button:hover {
     padding: 0px 10px;
     margin-left: 5%;
     margin-right: 5%;
-    margin-top: 5%;
+    margin-top: 2.5%;
     max-height: 400px;
-    border-radius: 10px; /* Added to make the corners rounded */
+    border-radius: 10px;
     font-family: 'Press Start 2P', cursive;
-    text-shadow: 2px 2px #000;;
+    text-shadow: 2px 2px #000;
+    z-index: 2;
   }
 
   #deck-container h3 {
     text-align: left;
-    font-size: 36px;
+    font-size: 30px;
     margin-bottom: 25px;
     text-shadow: 2px 2px #000;
-    /* animation: float 3s ease-in-out infinite; */
+    padding-left: 10px;
   } 
   
   
@@ -546,13 +595,12 @@ button:hover {
     border: 2px solid #ccc;
     padding: 5px 10px;
     min-height: 150px;
-    border-radius: 10px; /* Added to make the corners rounded */
-    position: relative; /* Added to ensure the overlay is positioned correctly */
-    padding-bottom: 20px;
+    border-radius: 10px;
+    position: relative;
     max-height: 200px;
     margin-left: 5%;
     margin-right: 5%;
-    margin-bottom: 5%;
+    margin-bottom: 2.5%;
     text-shadow: 2px 2px #000;
   }
   
@@ -566,10 +614,9 @@ button:hover {
     width: 75px;
     height: 75px;
     position: relative;
-    /* Removed 'left: 10%;' to prevent misalignment */
-    margin: 0 5px; /* Adds horizontal spacing between slots */
+    margin: 0 5px;
     border-radius: 10px;
-    background-color: transparent; /* No background tint */
+    background-color: transparent;
   }
 
   .deck-grid {
@@ -581,6 +628,7 @@ button:hover {
     padding: 10px;
     border-radius: 5px;
     margin-top: 20px;
+    justify-items: center;
   }
 
   .deck-slot {
@@ -631,12 +679,12 @@ button:hover {
   .draggable-item img {
     width: 80%;
     height: 80%;
-    display: block; /* Ensures the image behaves like a block element */
-    margin: auto; /* Centers the image horizontally */
-    object-fit: contain; /* Maintains aspect ratio */
-    position: relative; /* Allows for vertical centering */
-    top: 50%; /* Moves the image down 50% of its parent's height */
-    transform: translateY(-50%); /* Adjusts the image up by half its height to center it vertically */
+    display: block;
+    margin: auto;
+    object-fit: contain;
+    position: relative;
+    top: 50%;
+    transform: translateY(-50%);
   }
 
   .draggable-item:active {
@@ -653,17 +701,17 @@ button:hover {
   .deck-slot canvas {
     width: SHOP_SIZE;
     height: SHOP_SIZE;
-    object-fit: contain; /* Maintain aspect ratio */
+    object-fit: contain;
   }
 
   .inventory-grid {
     display: grid;
-    grid-template-columns: repeat(5, 1fr); /* 5 columns */
-    grid-template-rows: repeat(4, 1fr); /* 4 rows */
+    grid-template-columns: repeat(5, 1fr);
+    grid-template-rows: repeat(4, 1fr);
     gap: 10px;
     width: 100%;
-    max-width: 600px; /* Adjust as needed */
-    margin: 5px auto; /* Center the grid */
+    max-width: 600px;
+    margin: 5px auto;
   }
 
   /* Inventory Slot Styling */
@@ -671,11 +719,10 @@ button:hover {
     width: 75px;
     height: 75px;
     position: relative;
-    /* Removed 'left: 10%;' to prevent misalignment */
-    margin: 0 5px; /* Adds horizontal spacing between slots */
-    border: 2px solid #FFFFFF; /* Light white outline for placeholders */
+    margin: 0 5px;
+    border: 2px solid #FFFFFF;
     border-radius: 10px;
-    background-color: transparent; /* No background tint */
+    background-color: transparent;
   }
 
   /* Override any conflicting positioning for images within inventory */
@@ -728,9 +775,9 @@ button:hover {
 
   #shop-buttons {
     display: flex;
-    flex-direction: column; /* Stack buttons vertically */
-    gap: 10px; /* Space between buttons */
-    margin-right: 10px; /* Space above the buttons */
+    flex-direction: column;
+    gap: 10px;
+    margin-right: 10px;
   }
 
   #refresh-shop-button,
@@ -757,12 +804,12 @@ button:hover {
   }
 
   #freeze-shop-button {
-    background-color: #0000FF; /* Blue color to indicate freezing */
+    background-color: #0000FF;
     color: white;
   }
 
   #freeze-shop-button:hover {
-    background-color: #1E90FF; /* DodgerBlue on hover */
+    background-color: #1E90FF;
   }
 
   #freeze-shop-button:disabled {
@@ -773,7 +820,7 @@ button:hover {
   /* Blue tint for frozen shop items */
   #shop-items.shop-frozen .draggable-item img {
     filter: hue-rotate(200deg) brightness(0.7);
-    pointer-events: none; /* Disable interactions */
+    pointer-events: none;
     opacity: 0.7;
   }
 
@@ -806,17 +853,20 @@ button:hover {
     border-radius: 10px;
     font-size: 24px;
     text-align: center;
-    box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+    /* box-shadow: 0 0 10px rgba(255, 215, 0, 0.5); */
+    font-family: 'Press Start 2P', cursive;
   }
 
 .shop-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 10px;
+    margin-top: 10px;
+    margin-bottom: 20px;
     padding-right: 10px;
     padding-left: 10px;
     font-family: 'Press Start 2P', cursive;
+    font-size: 24px;
 }
 
 #shop-gold-display {
@@ -880,15 +930,19 @@ button:hover {
 
 .tooltip {
     position: absolute;
-    background-color: rgba(0, 0, 0, 0.8);
+    background-color: rgba(0, 0, 0, 0.9);
     color: #FFD700;
-    padding: 10px;
-    border-radius: 5px;
+    padding: 12px;
+    border-radius: 8px;
     font-size: 14px;
     z-index: 1000;
     pointer-events: none;
     transition: opacity 0.3s;
-    max-width: 200px;
+    width: 250px;
+    height: 140px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border: 1px solid #FFD700;
+    overflow: hidden;
 }
 
 .tooltip.hidden {
@@ -897,13 +951,40 @@ button:hover {
 
 .tooltip-title {
     font-weight: bold;
-    margin-bottom: 5px;
+    font-size: 18px;
+    margin-bottom: 8px;
+    border-bottom: 1px solid #FFD700;
+    padding-bottom: 4px;
+    color: #ffffff;
+}
+
+.tooltip-content {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
 }
 
 .tooltip-ability,
 .tooltip-evolution,
 .tooltip-value {
-    margin-top: 5px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.tooltip-label {
+    font-weight: bold;
+    margin-right: 8px;
+    flex-shrink: 0;
+    color: #FFD700;
+}
+
+.tooltip-value {
+    color: #FFFFFF;
+    text-align: right;
+    flex-grow: 1;
+    word-wrap: break-word;
+    max-width: 70%;
 }
 
 .item-slot {
@@ -921,7 +1002,7 @@ button:hover {
     align-items: center;
     font-size: 14px;
     color: #FFD700;
-    pointer-events: none; /* This makes the element non-interactive, allowing clicks to pass through */
+    pointer-events: none;
 }
 
 .cost-value {
@@ -955,33 +1036,45 @@ button:hover {
     height: 100%;
     overflow: hidden;
     pointer-events: none;
+    z-index: 1;
 }
 
 /* Individual particle */
 .particle {
     position: absolute;
-    background-color: rgba(255, 255, 255, 0.5);
+    background-color: rgba(255, 255, 255, 0.7);
     border-radius: 50%;
     pointer-events: none;
+    animation: floatParticle 15s infinite ease-in-out;
+    box-shadow: 0 0 5px rgba(255, 255, 255, 0.7);
+}
+
+@keyframes floatParticle {
+    0%, 100% {
+        transform: translate(0, 0);
+    }
+    25% {
+        transform: translate(10px, 10px);
+    }
+    50% {
+        transform: translate(0, 20px);
+    }
+    75% {
+        transform: translate(-10px, 10px);
+    }
 }
 
 /* Glowing effect for items */
 @keyframes glow {
-    0% { box-shadow: 0 0 5px #fff, 0 0 10px #fff, 0 0 15px #fff, 0 0 20px #ff00de, 0 0 35px #ff00de, 0 0 40px #ff00de, 0 0 50px #ff00de, 0 0 75px #ff00de; }
-    100% { box-shadow: 0 0 5px #fff, 0 0 10px #fff, 0 0 15px #fff, 0 0 20px #ff00de, 0 0 35px #ff00de, 0 0 40px #ff00de, 0 0 50px #ff00de, 0 0 75px #ff00de; }
-}
-
-/* Enhance shop background */
-#shop {
-    /* ... existing styles ... */
-    background: linear-gradient(45deg, #1a1a2e, #16213e, #0f3460);
-    background-size: 400% 400%;
-    animation: gradientBG 15s ease infinite;
+    0% { box-shadow: 0 0 10px #fff, 0 0 10px #fff, 0 0 15px #fff, 0 0 20px #ff00de, 0 0 35px #ff00de, 0 0 40px #ff00de, 0 0 50px #ff00de, 0 0 75px #ff00de; }
+    100% { box-shadow: 0 0 10px #fff, 0 0 10px #fff, 0 0 15px #fff, 0 0 20px #ff00de, 0 0 35px #ff00de, 0 0 40px #ff00de, 0 0 50px #ff00de, 0 0 75px #ff00de; }
 }
 
 @keyframes gradientBG {
     0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
+    25% { background-position: 100% 50%; }
+    50% { background-position: 100% 100%; }
+    75% { background-position: 0% 100%; }
     100% { background-position: 0% 50%; }
 }
 
@@ -1062,4 +1155,205 @@ button:hover {
 /* Add a specific style for the Round Lost screen */
 #round-end-screen.round-lost h2 {
     color: #FF6347; /* Tomato red color for emphasis */
+}
+
+#refresh-shop-button {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 15px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+#refresh-shop-button:hover {
+    background-color: #45a049;
+}
+
+#refresh-shop-button:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}
+
+.cost-indicator {
+    display: flex;
+    align-items: center;
+    margin-left: 10px;
+    font-size: 14px;
+}
+
+.cost-value {
+    margin-right: 3px;
+}
+
+.cost-coin {
+    width: 16px;
+    height: 16px;
+}
+
+@keyframes glowingButton {
+    0% { box-shadow: 0 0 5px #FFD700; }
+    50% { box-shadow: 0 0 20px #FFD700; }
+    100% { box-shadow: 0 0 5px #FFD700; }
+}
+
+.glow-button {
+    animation: glowingButton 1.5s infinite;
+}
+
+.freeze-shop-tooltip {
+    display: none !important;
+    visibility: hidden !important;
+    width: 200px;
+    background-color: rgba(0, 0, 0, 0.8);
+    color: #FFD700;
+    text-align: center;
+    border-radius: 6px;
+    padding: 10px;
+    position: absolute;
+    z-index: 1001;
+    bottom: 125%;
+    left: 50%;
+    margin-left: -100px;
+    opacity: 0;
+    transition: opacity 0.3s, visibility 0.3s;
+    pointer-events: none;
+}
+
+#freeze-shop-button:hover + .freeze-shop-tooltip {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1;
+}
+
+.purchase-confirmation {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: rgba(0, 0, 0, 0.9);
+    border: 2px solid #FFD700;
+    border-radius: 10px;
+    padding: 20px;
+    color: #FFFFFF;
+    text-align: center;
+    z-index: 1000;
+    font-family: 'Press Start 2P', cursive;
+}
+
+.purchase-confirmation h3 {
+    font-size: 24px;
+    margin-bottom: 15px;
+    color: #FFD700;
+}
+
+.purchase-confirmation p {
+    font-size: 16px;
+    margin-bottom: 20px;
+}
+
+.purchase-buttons {
+    display: flex;
+    justify-content: space-around;
+}
+
+.purchase-buttons button {
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    border: none;
+    border-radius: 5px;
+    transition: background-color 0.3s;
+}
+
+#confirm-purchase {
+    background-color: #4CAF50;
+    color: white;
+}
+
+#confirm-purchase:hover {
+    background-color: #45a049;
+}
+
+#cancel-purchase {
+    background-color: #f44336;
+    color: white;
+}
+
+#cancel-purchase:hover {
+    background-color: #d32f2f;
+}
+
+.hidden {
+    display: none;
+}
+
+#next-piece-display {
+    position: absolute;
+    top: 15%;
+    right: 4%;
+    text-align: center;
+    background-color: rgba(0, 0, 0, 0.7);
+    padding: 25px;
+    border-radius: 10px;
+}
+
+.next-label {
+    font-family: 'Press Start 2P', cursive;
+    font-size: 36px;
+    color: #FFD700;
+    margin-bottom: 10px;
+    text-shadow: 2px 2px #000;
+}
+
+#next-piece-container {
+    width: 150px;
+    height: 150px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 5px;
+}
+
+.game-tip {
+    position: absolute;
+    right: 5%;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 300px;
+    background-color: rgba(0, 0, 0, 0.85);
+    border: 2px solid #4CAF50;
+    border-radius: 15px;
+    padding: 20px;
+    color: #FFFFFF;
+    font-family: 'Roboto', sans-serif;
+    font-size: 16px;
+    text-align: left;
+    z-index: 1000;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s ease;
+}
+
+.game-tip-title {
+    font-family: 'Press Start 2P', cursive;
+    font-size: 18px;
+    color: #4CAF50;
+    margin-bottom: 15px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.game-tip-content {
+    line-height: 1.6;
+}
+
+.game-tip-icon {
+    font-size: 24px;
+    margin-right: 10px;
+    vertical-align: middle;
 }

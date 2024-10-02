@@ -1,9 +1,10 @@
-import { ALL_PIECE_TYPES, SHOP_ITEMS, CHARACTER_FAMILIES } from './config.js';
+import { ALL_PIECE_TYPES, SHOP_ITEMS, CHARACTER_FAMILIES, EXCLUDED_PIECES, GAME_TIPS } from './config.js';
 import { gameState } from './gameState.js'; // Updated import
 import { updateGold } from './ui.js';
 import { initializeRound } from './rounds.js';
 import { createPiece } from './piece.js'; // Import createPiece
 import { getRandomShopItems } from './helper.js';
+import { drawGameTip } from './render.js';
 
 // Add these functions at the top of the file
 function showSellOverlay() {
@@ -16,7 +17,22 @@ function hideSellOverlay() {
     overlay.classList.remove('active');
 }
 
+function hideAllTooltips() {
+    const tooltips = document.querySelectorAll('.tooltip');
+    tooltips.forEach(tooltip => {
+        tooltip.classList.add('hidden');
+    });
+}
+
 export function openShop(shop, deckItems, inventoryItems, shopItems, setIsPaused, cancelAnimationFrame, imageCache) {
+    // Add this at the beginning of the function
+    const freezeShopTooltip = document.getElementById('freeze-shop-tooltip');
+    if (freezeShopTooltip) {
+        freezeShopTooltip.style.display = 'none';
+        freezeShopTooltip.style.visibility = 'hidden';
+        freezeShopTooltip.style.opacity = '0';
+    }
+
     gameState.isPaused = true;
     cancelAnimationFrame();
     shop.classList.remove('hidden');
@@ -31,12 +47,25 @@ export function openShop(shop, deckItems, inventoryItems, shopItems, setIsPaused
 
     createParticles();
 
+    // Add this near the beginning of the function
+    const randomTip = GAME_TIPS[Math.floor(Math.random() * GAME_TIPS.length)];
+    const ctx = gameState.canvas.getContext('2d');
+    drawGameTip(ctx, randomTip);
+    console.log(randomTip);
 
     // Populate deck items with placeholders and associate data
     populateDeck(deckContainer, deckItems, gameState.imageCache, 28); // 7x4 grid has 28 slots
 
     // Populate shop items
-    populateItems(shopContainer, shopItems, gameState.imageCache, 'shop');
+    let filteredShopItems;
+    if (gameState.isShopFrozen && gameState.frozenShopItems) {
+        filteredShopItems = gameState.frozenShopItems.map(item => 
+            ALL_PIECE_TYPES.find(piece => piece.name === item.name)
+        );
+    } else {
+        filteredShopItems = shopItems.filter(item => item.name !== EXCLUDED_PIECES);
+    }
+    populateItems(shopContainer, filteredShopItems, gameState.imageCache, 'shop');
 
     // Re-enable drag and drop after populating
     enableDragAndDrop();
@@ -45,6 +74,11 @@ export function openShop(shop, deckItems, inventoryItems, shopItems, setIsPaused
     refreshButton.addEventListener('click', refreshShop);
 
     updateRefreshButtonState();
+    updateNextRoundButtonGlow();
+
+    // Update freeze button text
+    const freezeButton = document.getElementById('freeze-shop-button');
+    freezeButton.textContent = gameState.isShopFrozen ? 'Unfreeze Shop' : 'Freeze Shop';
 }
 
 function refreshShop() {
@@ -52,7 +86,7 @@ function refreshShop() {
         gameState.gold -= 1;
         updateGold();
 
-        const newShopItems = getRandomShopItems(ALL_PIECE_TYPES, SHOP_ITEMS);
+        const newShopItems = getRandomShopItems(ALL_PIECE_TYPES, SHOP_ITEMS, EXCLUDED_PIECES);
         const shopContainer = document.getElementById('shop-items');
         
         // Clear existing shop items
@@ -64,6 +98,7 @@ function refreshShop() {
         console.log("Shop refreshed. New gold balance:", gameState.gold);
 
         updateRefreshButtonState();
+        updateNextRoundButtonGlow();
     } else {
         console.log("Not enough gold to refresh the shop.");
         alert("Not enough gold to refresh the shop!");
@@ -127,6 +162,19 @@ function populateItems(container, items, imageCache, type) {
                 <img src="/static/images/gold-coin.png" alt="Gold" class="cost-coin">
             `;
             itemElement.appendChild(costDisplay);
+
+            // If the shop is frozen, check if the item was previously purchased
+            if (gameState.isShopFrozen && gameState.frozenShopItems) {
+                const frozenItem = gameState.frozenShopItems.find(fi => fi.name === item.name);
+                if (frozenItem && frozenItem.purchased) {
+                    draggableItem.classList.add('purchased');
+                    draggableItem.draggable = false;
+                    draggableItem.removeEventListener('dragstart', dragStart);
+                    draggableItem.removeEventListener('dragend', dragEnd);
+                    draggableItem.removeEventListener('mouseenter', showTooltip);
+                    draggableItem.removeEventListener('mouseleave', hideTooltip);
+                }
+            }
         }
 
         container.appendChild(itemElement);
@@ -144,10 +192,6 @@ function getPieceImageSrc(piece, imageCache) {
     }
 }
 
-
-function getGold() {
-    return gold;
-}
 
 export function buyItem(item, imageCache) {
     console.log(`Attempting to buy ${item.name} for ${item.attributes.cost} gold`);
@@ -182,10 +226,11 @@ export function buyItem(item, imageCache) {
             shopItemElement.removeEventListener('dragend', dragEnd);
             shopItemElement.removeEventListener('mouseenter', showTooltip);
             shopItemElement.removeEventListener('mouseleave', hideTooltip);
+            hideTooltip(); // Hide tooltip immediately after purchase
         }
-
         updateGold();
         updateRefreshButtonState();
+        updateNextRoundButtonGlow();
     } else {
         console.log(`Not enough gold to buy ${item.name}`);
         alert("Not enough gold!");
@@ -345,6 +390,7 @@ function dragLeave(e) {
  */
 function drop(e) {
     e.preventDefault();
+    hideAllTooltips(); // Add this line
     const id = e.dataTransfer.getData('text/plain');
     const source = e.dataTransfer.getData('source');
     console.log("Drop event triggered with ID:", id, "Source:", source);
@@ -407,7 +453,7 @@ function drop(e) {
             updateGold();
 
             populateDeck(document.getElementById('deck-items'), gameState.staticDeck, gameState.imageCache, 28);
-        }, 1000); // 2 seconds delay
+        }, 500); // 2 seconds delay
         
         return;
     }
@@ -619,16 +665,17 @@ function toggleFreezeShop() {
     if (gameState.isShopFrozen) {
         // Unfreeze the shop
         gameState.isShopFrozen = false;
-        shopItemsContainer.classList.remove('shop-frozen'); // Remove blue tint
+        shopItemsContainer.classList.remove('shop-frozen');
         enableShopInteractions();
         freezeButton.textContent = 'Freeze Shop';
         console.log("Shop has been unfrozen.");
     } else {
         // Freeze the shop
         gameState.isShopFrozen = true;
-        shopItemsContainer.classList.add('shop-frozen'); // Apply blue tint
+        shopItemsContainer.classList.add('shop-frozen');
         disableShopInteractions();
         freezeButton.textContent = 'Unfreeze Shop';
+        storeShopState(); // New function to store the current shop state
         console.log("Shop has been frozen until the next round.");
     }
 }
@@ -659,6 +706,7 @@ document.getElementById('freeze-shop-button').addEventListener('click', toggleFr
 
 export function showTooltip(event, character) {
     const tooltip = document.getElementById('character-tooltip');
+    tooltip.classList.remove('hidden');
     const shopContainer = document.getElementById('shop-container');
     const shopRect = shopContainer.getBoundingClientRect();
 
@@ -678,9 +726,20 @@ export function showTooltip(event, character) {
 
     tooltip.innerHTML = `
         <div class="tooltip-title">${character.name}</div>
-        <div class="tooltip-ability">Ability: ${character.abilities ? character.abilities.join(', ') : 'None'}</div>
-        <div class="tooltip-evolution">Next Evolution: ${nextEvolutionName}</div>
-        <div class="tooltip-value">Value: ${character.attributes.value}</div>
+        <div class="tooltip-content">
+            <div class="tooltip-ability">
+                <span class="tooltip-label">Ability:</span>
+                <span class="tooltip-value">${character.abilities ? character.abilities.join(', ') : 'None'}</span>
+            </div>
+            <div class="tooltip-evolution">
+                <span class="tooltip-label">Next Evolution:</span>
+                <span class="tooltip-value">${nextEvolutionName}</span>
+            </div>
+            <div class="tooltip-value">
+                <span class="tooltip-label">Value:</span>
+                <span class="tooltip-value">${character.attributes.value}</span>
+            </div>
+        </div>
     `;
 
     const x = event.clientX - shopRect.left + shopContainer.scrollLeft;
@@ -689,6 +748,15 @@ export function showTooltip(event, character) {
     tooltip.style.left = `${x + 10}px`;
     tooltip.style.top = `${y + 10}px`;
     tooltip.classList.remove('hidden');
+
+    // Ensure tooltip stays within shop container
+    const tooltipRect = tooltip.getBoundingClientRect();
+    if (tooltipRect.right > shopRect.right) {
+        tooltip.style.left = `${x - tooltipRect.width - 10}px`;
+    }
+    if (tooltipRect.bottom > shopRect.bottom) {
+        tooltip.style.top = `${y - tooltipRect.height - 10}px`;
+    }
 }
 
 export function hideTooltip() {
@@ -709,8 +777,54 @@ function createParticles() {
         particle.style.top = Math.random() * 100 + '%';
         particle.style.width = Math.random() * 5 + 'px';
         particle.style.height = particle.style.width;
-        particle.style.animationDuration = Math.random() * 3 + 2 + 's';
-        particle.style.animationDelay = Math.random() * 2 + 's';
+        
+        // Randomize animation properties
+        const animationDuration = 8 + Math.random() * 4; // 8-12 seconds
+        const animationDelay = Math.random() * -animationDuration; // Negative delay for out-of-sync start
+        
+        particle.style.animationDuration = `${animationDuration}s`;
+        particle.style.animationDelay = `${animationDelay}s`;
+        
         particleContainer.appendChild(particle);
     }
+}
+
+function updateNextRoundButtonGlow() {
+    const closeShopButton = document.getElementById('close-shop-button');
+    if (gameState.gold === 0) {
+        closeShopButton.classList.add('glow-button');
+    } else {
+        closeShopButton.classList.remove('glow-button');
+    }
+}
+
+// Add event listeners for the Freeze Shop button tooltip
+const freezeShopButton = document.getElementById('freeze-shop-button');
+const freezeShopTooltip = document.getElementById('freeze-shop-tooltip');
+
+freezeShopButton.addEventListener('mouseenter', () => {
+    freezeShopTooltip.style.display = 'block';
+    setTimeout(() => {
+        freezeShopTooltip.style.visibility = 'visible';
+        freezeShopTooltip.style.opacity = '1';
+    }, 10);
+});
+
+freezeShopButton.addEventListener('mouseleave', () => {
+    freezeShopTooltip.style.visibility = 'hidden';
+    freezeShopTooltip.style.opacity = '0';
+    setTimeout(() => {
+        freezeShopTooltip.style.display = 'none';
+    }, 300);
+});
+
+function storeShopState() {
+    const shopItems = document.querySelectorAll('#shop-items .draggable-item');
+    gameState.frozenShopItems = Array.from(shopItems).map(item => {
+        return {
+            name: item.dataset.pieceName,
+            purchased: item.classList.contains('purchased')
+        };
+    });
+    console.log("Shop state stored:", gameState.frozenShopItems);
 }

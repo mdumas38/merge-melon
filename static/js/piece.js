@@ -8,22 +8,29 @@ export function createPiece(character) {
 
     const newPiece = {
         ...character, // Spread all character properties
-        x: CANVAS_WIDTH / 2,
-        y: SPAWN_Y + character.attributes.radius,
+        physics: {
+            x: CANVAS_WIDTH / 2,
+            y: SPAWN_Y + character.attributes.radius,
+            radius: character.attributes.radius,
+            vx: 0,
+            vy: 0,
+            mass: character.attributes.mass,
+            isAtRest: false,
+            forces: [],
+        },
+        visual: {
+            width: character.attributes.width || character.attributes.radius * 2,
+            height: character.attributes.height || character.attributes.radius * 2,
+            rotation: 0,
+            angularVelocity: 0,
+        },
         tier: character.tier,
-        vx: 0,
-        vy: 0,
-        rotation: 0,
-        angularVelocity: 0,
-        isAtRest: false,
         merging: false,
         absorbing: false,
-        forces: [], // Initialize forces array
-        hasJumped: false, // Initialize hasJumped flag for abilities
-        id: null, // Initialize id property
-        family: character.family // Add family property 
+        hasJumped: false,
+        id: null,
+        family: character.family
     };
-    // console.log(`Created new piece: ${newPiece.name} at (${newPiece.x}, ${newPiece.y})`);
     return newPiece;
 }
 

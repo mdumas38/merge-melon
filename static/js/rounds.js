@@ -187,20 +187,24 @@ function showEndRoundNotification() {
 // Spawn a new piece
 export function spawnPiece() {
     if (gameState.activeDeck.length > 0) {
-        const randomIndex = Math.floor(Math.random() * gameState.activeDeck.length);
-        const piece = gameState.activeDeck.splice(randomIndex, 1)[0];
-        gameState.currentPiece = piece;
-        gameState.ballInHand = true; // Set ballInHand to true when spawning a new piece
-        console.log("Spawning piece:", piece.name);
-        console.log("ballInHand:", gameState.ballInHand);
-        console.log("Active deck:", gameState.activeDeck);
-        console.log("Active deck:", gameState.activeDeck.length);
-        console.log("getActiveDeck():", getActiveDeck());
-
-
-    } else {
-        return;
+        gameState.currentPiece = gameState.activeDeck.pop();
+        gameState.currentPiece.physics.x = CANVAS_WIDTH / 2;
+        gameState.currentPiece.physics.y = SPAWN_Y;
+        gameState.ballInHand = true;
+        
+        // Set the next piece
+        if (gameState.activeDeck.length > 0) {
+            gameState.nextPiece = gameState.activeDeck[gameState.activeDeck.length - 1];
+        } else {
+            gameState.nextPiece = null;
         }
+        
+        updateDeckCount();
+    } else {
+        console.log("No more pieces in the active deck.");
+        gameState.ballInHand = false;
+        gameState.nextPiece = null;
+    }
 }
 
 export function setActiveDeckToStaticDeck() {
@@ -219,7 +223,7 @@ export function nextRoundPhase1() {
         console.log("Score meets target. Proceeding to next round phase 1.");
         gameState.round++;
         updateRound();
-        gameState.targetScore = gameState.targetScore * 1.8;
+        gameState.targetScore = Math.round((gameState.targetScore * 1.8) / 10) * 10;
         updateTargetScore();
 
         const shopItems = getRandomShopItems(ALL_PIECE_TYPES, SHOP_ITEMS);

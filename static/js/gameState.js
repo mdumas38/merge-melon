@@ -36,6 +36,8 @@ export const gameState = {
     isRedGlowActive: false, // New property to track red glow state
     isRoundComplete: false, // New property to track round completion
     ballInHand: true, // New property to track if a ball is in hand
+    recentSpritePositions: [], // New property to track recent sprite positions
+    frozenShopItems: null, // New property to store frozen shop items
 };
 
 // Getter and setter for activeDeck
@@ -43,3 +45,7 @@ export const getActiveDeck = () => gameState.activeDeck;
 export const updateActiveDeck = (newDeck) => {
     gameState.activeDeck = newDeck;
 };
+
+export function getRemainingPieces() {
+    return getActiveDeck().length + (gameState.ballInHand ? 1 : 0);
+}

@@ -3,22 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Merge Melon Game</title>
+    <title>merge.ai</title>
     <link rel="stylesheet" href="css/style.css">
     <!-- Inline Styles (Optional, consider moving to CSS files) -->
    
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet">
 </head>
 <body>
     <div id="game-container">
         <canvas id="game-canvas"></canvas>
-        <div id="game-info">
-            <div id="round-container">Round: <span id="round">1</span></div>
-            <div id="gold-container">Gold: <span id="gold">0</span></div>
-        </div>
         
-        <!-- Updated Score and Target Score Display -->
+        <!-- Updated Score, Target Score, Round, and Gold Display -->
         <div id="score-target-display">
             <!-- Lives Display -->
             <div class="lives-container">
@@ -27,12 +25,22 @@
                     <!-- Heart images will be dynamically inserted here -->
                 </div>
             </div>
+            <div class="round-label">Round: <span id="round">1</span></div>
+            <div class="gold-label">
+                <img src="/static/images/gold-coin.png" alt="Gold" class="gold-icon">
+                <span class="gold-colon">:</span>
+                <span id="gold">0</span>
+            </div>
             <div class="score-label">Score</div>
             <div class="score-number" id="score">0</div>
             <div class="target-score-label">Target Score:</div>
             <div class="target-score-number" id="target-score">0</div>
             
-            
+        </div>
+        
+        <div id="next-piece-display">
+            <div class="next-label">Next</div>
+            <div id="next-piece-container"></div>
         </div>
         
         <div id="game-over" class="hidden">
@@ -47,7 +55,7 @@
             <button id="quit-button">Quit Game</button>
         </div>
         <div id="shop" class="hidden">
-            <h2>Rest</h2>
+            <h2>Round Complete!</h2>
             <div id="shop-content">
                 <div id="deck-container">
                     <h3>Deck</h3>
@@ -64,8 +72,15 @@
                     <div id="shop-items-and-refresh">
                         <div id="shop-items"></div>
                         <div id="shop-buttons">
-                            <button id="refresh-shop-button">Refresh Shop</button>
+                            <button id="refresh-shop-button">
+                                Reroll
+                                <span class="cost-indicator">
+                                    <img src="/static/images/gold-coin.png" alt="Gold" class="cost-coin">
+                                    <span class="cost-value">1</span>
+                                </span>
+                            </button>
                             <button id="freeze-shop-button">Freeze Shop</button>
+                            <span id="freeze-shop-tooltip" class="tooltip">Freezing the shop retains the same pieces for the next round</span>
                         </div>
                     </div>
                     <!-- Add this new div for the sell overlay -->
@@ -93,7 +108,6 @@
         <script type="module" src="js/main.js"></script>
         
         <div id="start-menu" class="hidden">
-            <h1 class="title">Slay the Melon</h1>
             <button id="start-button">Start Game</button>
         </div>
     </div>

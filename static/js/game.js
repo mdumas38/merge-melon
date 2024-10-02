@@ -1,4 +1,4 @@
-import { render } from './render.js';
+import { render, drawTooltip } from './render.js';
 import { preloadImages } from './imageLoader.js';
 import { 
     updateScore, 
@@ -18,7 +18,8 @@ import {
     BOUNCE_FACTOR,
     END_ROUND_COOLDOWN,
     LEFT_WALL,
-    RIGHT_WALL } from './config.js';  
+    RIGHT_WALL,
+ } from './config.js';  
 import { 
     snapshotStaticDeck, 
     checkActiveDeck, 
@@ -171,6 +172,22 @@ export async function initGame() {
     } catch (error) {
         console.error("Error preloading images:", error);
     }
+
+    // Add event listener for the current piece
+    gameState.canvas.addEventListener('mousemove', (e) => {
+        const pos = handleMouseMove(e, gameState.canvas);
+        gameState.aimX = pos.x;
+        gameState.aimY = pos.y;
+    });
+
+    // Add event listener for the next piece container
+    const nextPieceContainer = document.getElementById('next-piece-container');
+    nextPieceContainer.addEventListener('mousemove', (e) => {
+        const rect = nextPieceContainer.getBoundingClientRect();
+        const mouseX = e.clientX - rect.left;
+        const mouseY = e.clientY - rect.top;
+        handleMouseMove({ clientX: mouseX, clientY: mouseY }, gameState.canvas);
+    });
 }
 
 // Main game loop
@@ -197,6 +214,7 @@ export function gameLoop(currentTime = performance.now()) {
         const config = { 
             CANVAS_WIDTH, 
             CANVAS_HEIGHT, 
+            SPAWN_Y: gameState.SPAWN_Y,
             aimX: gameState.aimX, 
             aimY: gameState.aimY,
             debugMode: gameState.debugMode,
@@ -290,10 +308,11 @@ function checkGameOver() {
 export function checkRoundCompletion() {
     const activeDeckEmpty = getActiveDeck().length === 0;
     const cooldownElapsed = performance.now() - gameState.lastThrowTime >= END_ROUND_COOLDOWN;
+    const handEmpty = !gameState.ballInHand;
     // console.log("allPiecesAtRest:", allPiecesAtRest, "activeDeckEmpty:", activeDeckEmpty, "cooldownElapsed:", cooldownElapsed);
 
     
-    if (activeDeckEmpty && cooldownElapsed) {
+    if (activeDeckEmpty && cooldownElapsed && handEmpty) {
         // console.log("All pieces are at rest and deck is empty. Ending round.");
         endRound();
     }
@@ -311,8 +330,8 @@ export function resetGame() {
 
         openShop(
             shop,
-            staticDeck,  // Pass the current deck
-            purchasedBalls,  // Pass the inventory (purchased balls)
+            gameState.staticDeck,  // Pass the current deck
+            gameState.purchasedBalls,  // Pass the inventory (purchased balls)
             shopItems,  // Pass the shop items
             (value) => { isPaused = value; },
             () => { cancelAnimationFrame(gameState.animationId); },
@@ -345,5 +364,18 @@ function checkRedGlowCondition() {
     if (shouldGlow !== gameState.isRedGlowActive) {
         gameState.isRedGlowActive = shouldGlow;
         updateRedGlow(shouldGlow);
+    }
+}
+
+function throttle(func, limit) {
+    let inThrottle;
+    return function() {
+        const args = arguments;
+        const context = this;
+        if (!inThrottle) {
+            func.apply(context, args);
+            inThrottle = true;
+            setTimeout(() => inThrottle = false, limit);
+        }
     }
 }
