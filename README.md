@@ -44,24 +44,6 @@ To run merge.ai locally or deploy it on Replit, follow these steps:
    ```
 5. Access the game through your web browser at `http://localhost:5000` (or the provided Replit URL).
 
-## Project Structure
-.
-├── main.py
-├── static/
-│   ├── css/
-│   │   └── style.css
-│   ├── js/
-│   │   ├── main.js
-│   │   ├── game.js
-│   │   ├── config.js
-│   │   └── (other js files)
-│   ├── images/
-│   │   └── (game images)
-│   └── audio/
-│       └── (game audio files)
-└── templates/
-    └── index.html
-
 
 ## Technologies Used
 
