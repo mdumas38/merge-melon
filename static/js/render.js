@@ -601,7 +601,7 @@ function draw3DContainer(ctx, imageCache) {
 export function drawGameTip(ctx, tip) {
     ctx.save(); // Save the context state
 
-    const tipX = CANVAS_WIDTH * 0.785;
+    const tipX = CANVAS_WIDTH * 0.775;
     const tipY = CANVAS_HEIGHT * 0.45;
     const tipWidth = 300;
     const tipHeight = 130;

@@ -76,11 +76,12 @@ body {
 }
 
 #score-container .score-number {
-    font-size: 60px;
+    font-size: 48px;
     font-weight: bold;
     color: #FFD700;
     text-shadow: 2px 2px #000;
     animation: pulse 2s infinite;
+    margin-bottom: 10px;
 }
 
 
@@ -167,9 +168,9 @@ body {
 #shop {
     position: absolute;
     top: 5%;
-    left: 22.5%;
+    left: 25%;
     transform: translate(0%, 0%);
-    width: 55%;
+    width: 50%;
     height: 90%;
     max-width: 100%;
     max-height: 100%;
@@ -194,7 +195,7 @@ body {
 #shop h2 {
     font-family: 'Press Start 2P', cursive;
     color: #FFD700;
-    font-size: 3em;
+    font-size: 2em;
     margin-bottom: 5px;
     text-shadow: 2px 2px #000;
 }
@@ -350,7 +351,7 @@ body {
 /* Updated Score, Target Score, Round, and Gold Display Styles */
 #score-target-display {
     position: absolute;
-    top: 15%;
+    top: 10%;
     left: 2.5%;
     text-align: left;
     color: #FFFFFF;
@@ -365,7 +366,7 @@ body {
 }
 
 .score-label, .target-score-label, .round-label, .lives-label {
-    font-size: 20px;
+    font-size: 18px;
     margin-bottom: 10px;
     text-shadow: 2px 2px #000;
 }
@@ -403,9 +404,10 @@ body {
 }
 
 .score-number {
-    font-size: 60px;
+    font-size: 48px;
     color: #FFD700;
     text-shadow: 2px 2px #000;
+    margin-bottom: 10px;
 }
 
 /* Make Target Score Bigger */
@@ -487,7 +489,7 @@ button:hover {
 
 #start-menu .title {
     font-size: 48px;
-    margin-bottom: 30px;
+    margin-bottom: 0px;
     text-shadow: 2px 2px #000;
 }
 
@@ -582,7 +584,7 @@ button:hover {
 
   #deck-container h3 {
     text-align: left;
-    font-size: 30px;
+    font-size: 24px;
     margin-bottom: 25px;
     text-shadow: 2px 2px #000;
     padding-left: 10px;
@@ -861,12 +863,12 @@ button:hover {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-top: 10px;
-    margin-bottom: 20px;
+    padding-top: 10px;
+    padding-bottom: 10px;
     padding-right: 10px;
     padding-left: 10px;
     font-family: 'Press Start 2P', cursive;
-    font-size: 24px;
+    font-size: 18px;
 }
 
 #shop-gold-display {
@@ -1294,8 +1296,8 @@ button:hover {
 
 #next-piece-display {
     position: absolute;
-    top: 15%;
-    right: 4%;
+    top: 10%;
+    right: 5%;
     text-align: center;
     background-color: rgba(0, 0, 0, 0.7);
     padding: 25px;
@@ -1356,4 +1358,20 @@ button:hover {
     font-size: 24px;
     margin-right: 10px;
     vertical-align: middle;
+}
+
+.title-container {
+    background-color: rgba(0, 0, 0, 0.7); /* Semi-transparent black background */
+    padding: 20px;
+    border-radius: 10px;
+    display: inline-block;
+    margin-bottom: 0px;
+}
+
+.title {
+    font-family: 'Press Start 2P', cursive;
+    font-size: 48px;
+    color: #FFD700; /* Gold color */
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+    margin-bottom: 0px;
 }
